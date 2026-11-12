@@ -2295,7 +2295,8 @@ function showCardResult(){
       </div>
       ${pct>=80?'<div style="font-size:2rem">🎊</div>':""}
       <div style="display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:360px">
-        <button class="btn-start" style="font-size:1.1rem;padding:.9rem 2rem" onclick="restartCard()">🔄 もう一度やる</button>
+        <button class="btn-start" style="font-size:1.1rem;padding:.9rem 2rem" onclick="restartCard()">🔄 もう一度やる（全部）</button>
+        ${fuan>0?`<button class="btn-start" style="font-size:1.1rem;padding:.9rem 2rem;background:var(--warn)" onclick="restartFuanCard()">⚠️ 不安な単語だけやり直す（${fuan}語）</button>`:""}
         <button class="chip wide" onclick="go('s-card-set')">⚙ 設定に戻る</button>
         <button class="chip wide red" onclick="go('s-top')">🏠 ホームへ</button>
       </div>
@@ -2303,6 +2304,41 @@ function showCardResult(){
   `;
   launchConfetti(pct);
   if(pct>=80)setTimeout(()=>showToast(pct>=100?"🎉 完璧！全部覚えた！":"✨ よくできました！"),600);
+}
+function restartFuanCard(){
+  // 不安リストの単語だけで再スタート
+  const fuanWords=[...A.cardFuan].map(i=>A.cardWords[i]).filter(Boolean);
+  if(!fuanWords.length){showToast("不安な単語がありません！");return}
+  A.cardWords=[...fuanWords].sort(()=>Math.random()-.5);
+  A.cardIdx=0;A.cardFuan=new Set();
+  const s=document.getElementById("s-card");
+  s.querySelector(".card-area").innerHTML=`
+    <div class="flash-card" id="flash-card" onclick="flipCard()">
+      <div class="flash-inner" id="flash-inner">
+        <div class="flash-front">
+          <div class="flash-side" id="card-front-side">表</div>
+          <div class="flash-word" id="card-front-word"></div>
+          <div class="flash-hint">タップして裏返す</div>
+        </div>
+        <div class="flash-back">
+          <div class="flash-side" id="card-back-side">裏</div>
+          <div class="flash-mean" id="card-back-mean"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
+      <span class="card-counter" id="card-counter">1 / 1</span>
+      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
+    </div>
+    <div class="card-acts">
+      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
+    </div>
+    <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
+  `;
+  renderCard();
+  showToast("⚠️ 不安な単語 "+fuanWords.length+"語 でやり直し！");
 }
 function restartCard(){
   A.cardIdx=0;A.cardFuan=new Set();
