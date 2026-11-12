@@ -2274,7 +2274,68 @@ function renderCard(){
 }
 function flipCard(){$("flash-inner").classList.toggle("flipped")}
 function prevCard(){if(A.cardIdx>0){A.cardIdx--;renderCard()}}
-function nextCard(){if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}}
+function nextCard(){
+  if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}
+  else{showCardResult()}
+}
+function showCardResult(){
+  const total=A.cardWords.length;
+  const fuan=A.cardFuan.size;
+  const oboeta=total-fuan;
+  const pct=Math.round((oboeta/total)*100);
+  // 結果画面を表示
+  const area=document.querySelector("#s-card .card-area");
+  area.innerHTML=`
+    <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.5rem;padding:1rem">
+      <div style="font-size:1.3rem;font-weight:800;color:var(--ink)">🎉 カード完了！</div>
+      <div style="background:#fff;border-radius:var(--rl);box-shadow:var(--shm);border:1px solid var(--rule);padding:1.75rem 2.5rem;display:flex;flex-direction:column;align-items:center;gap:.75rem">
+        <div style="font-size:3.5rem;font-weight:800;color:var(--ok)">${pct}%</div>
+        <div style="font-size:1rem;color:var(--ink2)">覚えた！ <strong style="color:var(--ok)">${oboeta}</strong> / ${total} 語</div>
+        ${fuan>0?`<div style="font-size:.88rem;color:var(--warn)">不安… ${fuan}語 → 苦手リストに追加済み</div>`:"<div style='font-size:.88rem;color:var(--ok)'>全部覚えた！完璧です！</div>"}
+      </div>
+      ${pct>=80?'<div style="font-size:2rem">🎊</div>':""}
+      <div style="display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:360px">
+        <button class="btn-start" style="font-size:1.1rem;padding:.9rem 2rem" onclick="restartCard()">🔄 もう一度やる</button>
+        <button class="chip wide" onclick="go('s-card-set')">⚙ 設定に戻る</button>
+        <button class="chip wide red" onclick="go('s-top')">🏠 ホームへ</button>
+      </div>
+    </div>
+  `;
+  launchConfetti(pct);
+  if(pct>=80)setTimeout(()=>showToast(pct>=100?"🎉 完璧！全部覚えた！":"✨ よくできました！"),600);
+}
+function restartCard(){
+  A.cardIdx=0;A.cardFuan=new Set();
+  A.cardWords=[...A.cardWords].sort(()=>Math.random()-.5);
+  // card-areaを再構築
+  const s=document.getElementById("s-card");
+  s.querySelector(".card-area").innerHTML=`
+    <div class="flash-card" id="flash-card" onclick="flipCard()">
+      <div class="flash-inner" id="flash-inner">
+        <div class="flash-front">
+          <div class="flash-side" id="card-front-side">表</div>
+          <div class="flash-word" id="card-front-word"></div>
+          <div class="flash-hint">タップして裏返す</div>
+        </div>
+        <div class="flash-back">
+          <div class="flash-side" id="card-back-side">裏</div>
+          <div class="flash-mean" id="card-back-mean"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
+      <span class="card-counter" id="card-counter">1 / 1</span>
+      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
+    </div>
+    <div class="card-acts">
+      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
+    </div>
+    <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
+  `;
+  renderCard();
+}
 function cardOboeta(){$("card-status").textContent="✅ 覚えた！";A.cardFuan.delete(A.cardIdx);setTimeout(nextCard,400)}
 function cardFuan(){
   A.cardFuan.add(A.cardIdx);
