@@ -2172,7 +2172,8 @@ $("btn-vtest-start").onclick=()=>{
 };
 
 function renderVTestQ(idx){
-  const q=A.vtestWords[idx];if(!q)return;
+  const qraw=A.vtestWords[idx];if(!qraw)return;
+  const q={...qraw,word:qraw.w||qraw.word||"",meaning:qraw.m||qraw.meaning||""};
   $("vtest-progress").textContent=`${idx+1}/${A.vtestWords.length}`;
   const area=$("vtest-q-area");area.innerHTML="";
   const card=mk("div","vocab-q-card");
@@ -2206,7 +2207,11 @@ async function finishVTest(){
     let cor=0;const wrongWords=[];
     results.forEach((r,i)=>{
       A.vtestResults[i]=r;
-      if(r.correct){cor++}else{wrongWords.push(A.vtestWords[i]);addWeakWord(A.vtestWords[i])}
+      if(r.correct){cor++}else{
+        const wraw=A.vtestWords[i];
+        const wn={n:wraw.n||0,word:wraw.w||wraw.word||"",meaning:wraw.m||wraw.meaning||""};
+        wrongWords.push(wraw);addWeakWord(wn);
+      }
     });
     renderVResult(cor,A.vtestWords.length,wrongWords);go("s-vresult");
     setTimeout(()=>launchConfetti(Math.round((cor/A.vtestWords.length)*100)),600);
@@ -2220,7 +2225,8 @@ function renderVResult(cor,total,wrongWords){
   setTimeout(()=>{$("v-sc-fg").style.strokeDashoffset=283*(1-pct/100);$("v-sc-fg").style.stroke=col;$("v-sc-pct").style.color=col},100);
   $("v-wrong-info").textContent=wrongWords.length>0?`${wrongWords.length}問 誤答 → 苦手リストに追加済み`:"全問正解！";
   const cards=$("v-result-cards");cards.innerHTML="";
-  A.vtestWords.forEach((w,i)=>{
+  A.vtestWords.forEach((wraw,i)=>{
+    const w={...wraw,word:wraw.w||wraw.word||"",meaning:wraw.m||wraw.meaning||""};
     const r=A.vtestResults[i]||{};const ans=A.vtestAnswers[i]||"（未回答）";
     const card=mk("div","q-result");
     const hd=div("q-result-hd "+(r.correct?"ok-h":"ng-h"),`問 ${i+1}　${w._dir==="e2j"?"英→和":"和→英"}`);
@@ -2250,12 +2256,19 @@ $("btn-card-start").onclick=()=>{
 };
 
 function renderCard(){
-  const w=A.cardWords[A.cardIdx];if(!w)return;
+  const raw=A.cardWords[A.cardIdx];if(!raw)return;
+  // words.js の形式は {n, w, m} → word/meaning に変換
+  const w={word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""};
   $("card-progress").textContent=`${A.cardIdx+1}/${A.cardWords.length}`;
   $("card-counter").textContent=`${A.cardIdx+1} / ${A.cardWords.length}`;
   $("flash-inner").classList.remove("flipped");
-  if(A.c.dir==="e2j"){$("card-front-side").textContent="英語";$("card-front-word").textContent=w.word;$("card-back-side").textContent="意味";$("card-back-mean").textContent=w.meaning}
-  else{$("card-front-side").textContent="意味";$("card-front-word").textContent=w.meaning;$("card-back-side").textContent="英語";$("card-back-mean").textContent=w.word}
+  if(A.c.dir==="e2j"||A.c.dir===""){
+    $("card-front-side").textContent="英語";$("card-front-word").textContent=w.word;
+    $("card-back-side").textContent="意味";$("card-back-mean").textContent=w.meaning;
+  }else{
+    $("card-front-side").textContent="意味";$("card-front-word").textContent=w.meaning;
+    $("card-back-side").textContent="英語";$("card-back-mean").textContent=w.word;
+  }
   $("card-status").textContent=A.cardFuan.has(A.cardIdx)?"🔖 不安リストに追加済み":"";
   $("card-prev").disabled=A.cardIdx===0;$("card-next").disabled=A.cardIdx>=A.cardWords.length-1;
 }
@@ -2264,7 +2277,9 @@ function prevCard(){if(A.cardIdx>0){A.cardIdx--;renderCard()}}
 function nextCard(){if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}}
 function cardOboeta(){$("card-status").textContent="✅ 覚えた！";A.cardFuan.delete(A.cardIdx);setTimeout(nextCard,400)}
 function cardFuan(){
-  A.cardFuan.add(A.cardIdx);addWeakWord(A.cardWords[A.cardIdx]);
+  A.cardFuan.add(A.cardIdx);
+  const raw=A.cardWords[A.cardIdx];
+  addWeakWord({n:raw.n||0,word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""});
   $("card-status").textContent="🔖 苦手リストに追加";showToast("⚠️ 苦手リストに追加しました");setTimeout(nextCard,400);
 }
 
@@ -2313,7 +2328,7 @@ function renderSent(){
     const acts=div();acts.style.cssText="display:flex;gap:.5rem;margin-top:.75rem";
     const oBtn=mk("button","btn-oboeta");oBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";oBtn.textContent="覚えた！";
     const fBtn=mk("button","btn-fuan");fBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";fBtn.textContent="不安…";
-    if(w){fBtn.onclick=()=>{addWeakWord(w);showToast("⚠️ 苦手リストに追加しました")}}
+    if(w){fBtn.onclick=()=>{addWeakWord({n:w.n||0,word:w.w||w.word||"",meaning:w.m||w.meaning||""});showToast("⚠️ 苦手リストに追加しました")}}
     acts.append(oBtn,fBtn);body.appendChild(acts);
     card.appendChild(body);list.appendChild(card);
   });
@@ -2358,7 +2373,8 @@ function startWeakCard(){
   A.weakCardWords=[...list].sort(()=>Math.random()-.5);A.weakCardIdx=0;renderWeakCard();go("s-weak-card");
 }
 function renderWeakCard(){
-  const w=A.weakCardWords[A.weakCardIdx];if(!w)return;
+  const raw=A.weakCardWords[A.weakCardIdx];if(!raw)return;
+  const w={word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""};
   $("weak-card-progress").textContent=`${A.weakCardIdx+1}/${A.weakCardWords.length}`;
   $("weak-card-counter").textContent=`${A.weakCardIdx+1} / ${A.weakCardWords.length}`;
   $("wcard-front-word").textContent=w.word;$("wcard-back-mean").textContent=w.meaning;
