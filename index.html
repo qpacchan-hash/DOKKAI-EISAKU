@@ -402,6 +402,30 @@ input,textarea{font-family:var(--fu)}
   .flash-word{font-size:1.6rem}
   .flash-mean{font-size:1.2rem}
 }
+
+/* ── 段落ヒント（特訓モード）── */
+.para-wrap{margin-bottom:1.5rem}
+.para-hint-btn{
+  display:inline-flex;align-items:center;gap:.35rem;
+  margin-top:.6rem;
+  background:var(--warnl);border:1.5px solid var(--warn);border-radius:20px;
+  padding:.3rem .85rem;font-size:.8rem;font-weight:600;color:var(--warn);
+  cursor:pointer;transition:.15s;
+}
+.para-hint-btn:hover{background:var(--warn);color:#fff}
+.para-hint-panel{
+  margin-top:.6rem;
+  background:#fff;border:1px solid var(--warn);border-radius:var(--r);
+  padding:1rem 1.1rem;font-size:.85rem;color:var(--ink2);line-height:1.7;
+  display:none;animation:fadeIn .25s;
+}
+.para-hint-panel.open{display:block}
+.hint-section{margin-bottom:.65rem}
+.hint-section:last-child{margin-bottom:0}
+.hint-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);margin-bottom:.25rem}
+.hint-keywords{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
+.hint-kw{background:var(--warnl);border:1px solid var(--warn);border-radius:4px;padding:.2rem .55rem;font-size:.8rem;color:var(--ink)}
+.hint-kw strong{color:var(--warn);font-family:var(--fe)}
 </style>
 </head>
 <body>
@@ -665,14 +689,11 @@ input,textarea{font-family:var(--fu)}
   <button class="tab-btn active" id="rt1" onclick="rtab('pass')">📄 本文</button>
   <button class="tab-btn" id="rt2" onclick="rtab('qs')">📝 設問</button>
 </div>
-<!-- 特訓モード: ヒントバー -->
+<!-- 特訓モード: ヒントバー（翻訳のみ） -->
 <div class="hint-bar" id="hint-bar">
-  <button class="hint-btn" onclick="showHint('words')">📊 語数・難度ヒント</button>
-  <button class="hint-btn" onclick="showHint('para')">📋 段落要旨</button>
-  <button class="hint-btn" onclick="showHint('vocab')">📖 難語注釈</button>
+  <span style="font-size:.8rem;color:var(--warn);font-weight:600">💡 特訓モード：各段落に「ヒントを見る」ボタンがあります</span>
   <button class="hint-btn" onclick="toggleTransBar()">🔤 翻訳バーを開く</button>
 </div>
-<div class="hint-panel" id="hint-panel"></div>
 <div class="trans-bar" id="trans-bar">
   <div class="trans-row">
     <input class="trans-inp" id="trans-inp" placeholder="英文をここに入力または貼り付け…" />
@@ -1538,6 +1559,8 @@ function buildRPrompt(){
     isVis?"- Include a 'visual' field with a self-contained SVG representing the chart/table":"",
     "- Include a 'passageJa' field with a complete Japanese translation of the entire passage",
     "",
+    A.rMode==="kunshu" ? "IMPORTANT: Since this is TRAINING MODE, include a 'hints' field: an array of hint objects, one per paragraph. Each hint must include: (1) 'point': the main reading point of the paragraph in Japanese (2-3 sentences), (2) 'structure': key grammar/syntax to notice in Japanese (1-2 sentences), (3) 'keywords': array of {word, meaning} for important words in that paragraph." : "",
+    "",
     "Output ONLY a JSON object:",
     JSON.stringify({
       targetMinutes:10,
@@ -1545,6 +1568,7 @@ function buildRPrompt(){
       passageJa:"日本語訳",
       visual:isVis?"<svg .../>":"",
       notes:[{word:"word",explanation:"日本語説明"}],
+      hints: A.rMode==="kunshu" ? [{paraIndex:0,point:"この段落のポイント（日本語）",structure:"注目すべき構文（日本語）",keywords:[{word:"key word",meaning:"意味"}]}] : undefined,
       questions:[
         {id:1,type:"choice",question:"設問（日本語）",choices:["ア. A","イ. B","ウ. C","エ. D"],answer:"ア",evidence:"English sentence",explanation:"日本語解説"},
         {id:2,type:"free",question:"設問（日本語）",answer:"模範解答",evidence:"English sentence",explanation:"日本語解説"}
@@ -1727,8 +1751,6 @@ function renderQuiz(d,ids){
 
 function fillPass(d,prefix){
   const ptxt=$(prefix+"-pass-txt"),pja=$(prefix+"-pass-ja"),pvis=$(prefix+"-pass-visual"),pnotes=$(prefix+"-pass-notes");
-  if(ptxt)ptxt.textContent=d.passage||"";
-  if(pja){pja.textContent=d.passageJa||"";pja.className="ja-txt"+(d.passageJa?" ":"")}
   if(pvis){
     pvis.innerHTML="";
     if(d.visual){
@@ -1740,21 +1762,75 @@ function fillPass(d,prefix){
       wrap.appendChild(lbl);wrap.appendChild(inner);pvis.appendChild(wrap);
     }
   }
+  // 本文を段落ごとに分割し、特訓モードではヒントボタンを配置
+  if(ptxt){
+    ptxt.innerHTML="";
+    const paras=(d.passage||"").split(/\n\n+/).map(p=>p.trim()).filter(Boolean);
+    const hints=d.hints||[];
+    const isKunshu=prefix==="r"&&A.rMode==="kunshu";
+    paras.forEach((para,i)=>{
+      const wrap=mk("div","para-wrap");
+      const ptEl=mk("p","en-txt");ptEl.style.cssText="white-space:pre-wrap;margin:0";ptEl.textContent=para;
+      wrap.appendChild(ptEl);
+      if(isKunshu&&hints[i]){
+        const hint=hints[i];
+        const btn=mk("button","para-hint-btn");btn.textContent="💡 段落"+(i+1)+"のヒント";
+        const panel=mk("div","para-hint-panel");
+        // ポイント
+        if(hint.point){
+          const sec=div("hint-section");
+          sec.appendChild(div("hint-label","📌 読解ポイント"));
+          sec.appendChild(div(null,hint.point));
+          panel.appendChild(sec);
+        }
+        // 構文
+        if(hint.structure){
+          const sec=div("hint-section");
+          sec.appendChild(div("hint-label","⚙ 注目すべき構文"));
+          sec.appendChild(div(null,hint.structure));
+          panel.appendChild(sec);
+        }
+        // キーワード
+        if(hint.keywords?.length){
+          const sec=div("hint-section");
+          sec.appendChild(div("hint-label","🔑 重要語彙"));
+          const kwWrap=div("hint-keywords");
+          hint.keywords.forEach(k=>{
+            const kw=mk("span","hint-kw");kw.innerHTML=`<strong>${esc(k.word)}</strong>：${esc(k.meaning)}`;kwWrap.appendChild(kw);
+          });
+          sec.appendChild(kwWrap);
+          panel.appendChild(sec);
+        }
+        btn.onclick=()=>{
+          panel.classList.toggle("open");
+          btn.textContent=panel.classList.contains("open")?"✖ ヒントを隠す":"💡 段落"+(i+1)+"のヒント";
+        };
+        wrap.appendChild(btn);
+        wrap.appendChild(panel);
+      }
+      ptxt.appendChild(wrap);
+    });
+  }
+  if(pja){pja.textContent=d.passageJa||"";pja.className="ja-txt"+(d.passageJa?" ":"")}
   if(pnotes){
     pnotes.innerHTML="";
     if(d.notes?.length){
-      const h=mk("p");h.innerHTML="<strong>【注釈】</strong>";pnotes.appendChild(h);
+      const h2=mk("p");h2.innerHTML="<strong>【注釈】</strong>";pnotes.appendChild(h2);
       d.notes.forEach(n=>{const p=mk("p");p.innerHTML=`<span class="note-w">${esc(n.word)}</span>：${esc(n.explanation)}`;pnotes.appendChild(p)});
     }
   }
   // 解説用も同期
   if(prefix==="r"){
     const ep=$("e-pass-txt"),en=$("e-pass-notes");
-    if(ep)ep.textContent=d.passage||"";
+    if(ep){
+      ep.innerHTML="";
+      const paras2=(d.passage||"").split(/\n\n+/).map(p=>p.trim()).filter(Boolean);
+      paras2.forEach(para=>{const p=mk("p","en-txt");p.style.cssText="white-space:pre-wrap;margin:0 0 1rem";p.textContent=para;ep.appendChild(p)});
+    }
     if(en){
       en.innerHTML="";
       if(d.notes?.length){
-        const h=mk("p");h.innerHTML="<strong>【注釈】</strong>";en.appendChild(h);
+        const h3=mk("p");h3.innerHTML="<strong>【注釈】</strong>";en.appendChild(h3);
         d.notes.forEach(n=>{const p=mk("p");p.innerHTML=`<span class="note-w">${esc(n.word)}</span>：${esc(n.explanation)}`;en.appendChild(p)});
       }
     }
@@ -2052,20 +2128,7 @@ $("btn-w-redo").onclick=()=>go("s-wstart");
 // ================================================================
 // 特訓モード ヒント・翻訳
 // ================================================================
-function showHint(type){
-  const d=A.qdata;if(!d)return;
-  const p=$("hint-panel");
-  let content="";
-  if(type==="words"){content=`語数: 約${d.passage?.split(/\s+/).length||"?"}語 / 難易度: ${A.r.difficulty.toUpperCase()} / 目標タイム: ${d.targetMinutes}分`}
-  else if(type==="para"){
-    const paras=(d.passage||"").split(/\n\n+/).filter(Boolean);
-    content="段落要旨:\n"+paras.map((p,i)=>`[第${i+1}段落] ${p.slice(0,60)}…`).join("\n");
-  }else if(type==="vocab"){
-    if(d.notes?.length)content="難語注釈:\n"+d.notes.map(n=>`• ${n.word}: ${n.explanation}`).join("\n");
-    else content="難語注釈は設定されていません。";
-  }
-  p.textContent=content;p.classList.add("show");
-}
+
 function toggleTransBar(){$("trans-bar").classList.toggle("show")}
 async function doTranslate(){
   const txt=$("trans-inp").value.trim();if(!txt)return;
