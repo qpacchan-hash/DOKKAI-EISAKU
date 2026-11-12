@@ -2402,154 +2402,51 @@ function renderSent(){
   const list=$("sent-word-list");list.innerHTML="";
   const sentences=A.sentData?.sentences||[];
   sentences.forEach((s,i)=>{
-    const w=A.sentWords.find(x=>(x.word||x.w||"")===s.word);
-    const card=mk("div","vocab-q-card");
+    if(!s||!s.sentence)return;
+    const word=s.word||"";
+    const w=A.sentWords.find(x=>(x.word||x.w||"")===word);
     const meaning=w?.meaning||w?.m||"";
-    const hd=div("vq-hd",`${s.word} （${meaning}）`);
+    const card=mk("div","vocab-q-card");
+    const hd=div("vq-hd",word+(meaning?" （"+meaning+"）":""));
     card.appendChild(hd);
     const body=div("vq-body");
     // 例文（対象単語を長押しで意味表示）
     const sentEl=mk("div","ex-sent");
-    const safeWord=(s.word||"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
-    const parts=safeWord ? s.sentence.split(new RegExp(`\\b(${safeWord})\\b`,"gi")) : [s.sentence];
-    parts.forEach(p=>{
-      if(p&&s.word&&p.toLowerCase()===s.word.toLowerCase()){
-        const sp=mk("span","ex-word-span",p);
-        const handleReveal=()=>{sp.classList.toggle("revealed");showWordTooltip(sp,s.word+" = "+(w?.meaning||""))}
-        sp.addEventListener("dblclick",handleReveal);
-        let longPress;sp.addEventListener("touchstart",()=>{longPress=setTimeout(handleReveal,600)},{passive:true});
-        sp.addEventListener("touchend",()=>clearTimeout(longPress));
-        sentEl.appendChild(sp);
-      }else{sentEl.appendChild(document.createTextNode(p))}
-    });
+    if(word){
+      // 単語を安全に分割
+      try{
+        const escaped=word.replace(/[-.*+?^${}()|[\]\\]/g,"\\$&");
+        const regex=new RegExp("("+escaped+")","gi");
+        const parts=s.sentence.split(regex);
+        parts.forEach(p=>{
+          if(!p)return;
+          if(word&&p.toLowerCase()===word.toLowerCase()){
+            const sp=mk("span","ex-word-span",p);
+            const handleReveal=()=>{sp.classList.toggle("revealed");showWordTooltip(sp,word+" = "+meaning)};
+            sp.addEventListener("dblclick",handleReveal);
+            let lp;sp.addEventListener("touchstart",()=>{lp=setTimeout(handleReveal,600)},{passive:true});
+            sp.addEventListener("touchend",()=>clearTimeout(lp));
+            sentEl.appendChild(sp);
+          }else{
+            sentEl.appendChild(document.createTextNode(p));
+          }
+        });
+      }catch(e){
+        sentEl.textContent=s.sentence;
+      }
+    }else{
+      sentEl.textContent=s.sentence||"";
+    }
     body.appendChild(sentEl);
     if(s.sentenceJa){const ja=div();ja.style.cssText="font-size:.82rem;color:var(--ink2);margin-top:.5rem";ja.textContent=s.sentenceJa;body.appendChild(ja)}
     const acts=div();acts.style.cssText="display:flex;gap:.5rem;margin-top:.75rem";
     const oBtn=mk("button","btn-oboeta");oBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";oBtn.textContent="覚えた！";
     const fBtn=mk("button","btn-fuan");fBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";fBtn.textContent="不安…";
-    fBtn.onclick=()=>{addWeakWord({n:w?.n||0,word:s.word||"",meaning:meaning||""});showToast("⚠️ 苦手リストに追加しました")};
+    fBtn.onclick=()=>{addWeakWord({n:w?.n||0,word:word,meaning:meaning});showToast("⚠️ 苦手リストに追加しました")};
     acts.append(oBtn,fBtn);body.appendChild(acts);
     card.appendChild(body);list.appendChild(card);
   });
 }
-
-function showWordTooltip(el,text){
-  const tt=$("tooltip");tt.textContent=text;tt.style.display="block";
-  const rect=el.getBoundingClientRect();
-  tt.style.left=rect.left+"px";tt.style.top=(rect.top-36+window.scrollY)+"px";
-  setTimeout(()=>{tt.style.display="none"},2000);
-}
-
-// ================================================================
-// 苦手単語リスト
-// ================================================================
-function getWeakWords(){try{return JSON.parse(localStorage.getItem("weak_words_v4")||"[]")}catch{return[]}}
-function setWeakWords(arr){try{localStorage.setItem("weak_words_v4",JSON.stringify(arr))}catch{}}
-
-function addWeakWord(w){
-  const list=getWeakWords();
-  if(!list.find(x=>x.word===w.word&&x.meaning===w.meaning)){
-    list.push({no:w.n||0,word:w.word,meaning:w.meaning});setWeakWords(list);
-  }
-}
-
-function renderWeakList(){
-  const list=getWeakWords();const el=$("weak-list");el.innerHTML="";
-  if(!list.length){el.innerHTML='<div class="weak-row" style="justify-content:center;color:var(--ink3)">苦手単語はまだありません</div>';return}
-  list.forEach((w,i)=>{
-    const row=div("weak-row");
-    row.appendChild(mk("span","weak-num",String(w.no)));
-    row.appendChild(mk("span","weak-word",w.word));
-    row.appendChild(mk("span","weak-mean",w.meaning));
-    const del=mk("span","weak-del","削除");
-    del.onclick=()=>{const all=getWeakWords();all.splice(i,1);setWeakWords(all);renderWeakList()};
-    row.appendChild(del);el.appendChild(row);
-  });
-}
-
-function startWeakCard(){
-  const list=getWeakWords();if(!list.length){alert("苦手単語リストが空です");return}
-  A.weakCardWords=[...list].sort(()=>Math.random()-.5);A.weakCardIdx=0;renderWeakCard();go("s-weak-card");
-}
-function renderWeakCard(){
-  const raw=A.weakCardWords[A.weakCardIdx];if(!raw)return;
-  const w={word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""};
-  $("weak-card-progress").textContent=`${A.weakCardIdx+1}/${A.weakCardWords.length}`;
-  $("weak-card-counter").textContent=`${A.weakCardIdx+1} / ${A.weakCardWords.length}`;
-  $("wcard-front-word").textContent=w.word;$("wcard-back-mean").textContent=w.meaning;
-  $("weak-flash-inner").classList.remove("flipped");
-}
-function flipWeakCard(){$("weak-flash-inner").classList.toggle("flipped")}
-function prevWeakCard(){if(A.weakCardIdx>0){A.weakCardIdx--;renderWeakCard()}}
-function nextWeakCard(){if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}}
-function weakCardOboeta(){
-  const w=A.weakCardWords[A.weakCardIdx];
-  const all=getWeakWords();const idx=all.findIndex(x=>x.word===w.word);
-  if(idx>=0){all.splice(idx,1);setWeakWords(all)}
-  showToast("✅ リストから削除しました！");
-  if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
-  else{go("s-weak");renderWeakList();showToast("🎉 すべて完了！")}
-}
-function weakCardFuan(){showToast("📌 引き続き練習しよう");if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}}
-
-// ================================================================
-// 中断・ホーム確認
-// ================================================================
-function confirmAbort(backScreen){
-  if(confirm("解答を中断しますか？（現在の解答は保存されません）")){
-    clearInterval(A.tiv);A.tOn=false;go(backScreen);
-  }
-}
-function confirmHome(){
-  if(confirm("ホームへ戻りますか？（現在の解答は保存されません）")){
-    clearInterval(A.tiv);A.tOn=false;A.qdata=null;A.uans={};A.wrong=[];A.wdata=null;A.wans="";go("s-top");
-  }
-}
-
-// ================================================================
-// 通過: 解答解説
-// ================================================================
-function togglePassage(){
-  const body=$("pass-toggle-body"),icon=$("pass-toggle-icon"),lbl=$("pass-toggle-lbl");
-  const isOpen=body.classList.toggle("open");
-  icon.textContent=isOpen?"▲":"▼";lbl.textContent=isOpen?"📄 本文を非表示":"📄 本文を表示する";
-}
-
-// ================================================================
-// SP TABS
-// ================================================================
-function rtab(w){const pp=$("rp-pass"),pq=$("rp-qs"),t1=$("rt1"),t2=$("rt2");if(w==="pass"){pp.classList.remove("col-sp-hide");pq.classList.add("col-sp-hide");t1.classList.add("active");t2.classList.remove("active")}else{pq.classList.remove("col-sp-hide");pp.classList.add("col-sp-hide");t2.classList.add("active");t1.classList.remove("active")}}
-function wtab(w){const pp=$("pane-wprm"),pa=$("pane-wans"),t1=$("wt1"),t2=$("wt2");if(w==="prm"){pp.classList.remove("col-sp-hide");pa.classList.add("col-sp-hide");t1.classList.add("active");t2.classList.remove("active")}else{pa.classList.remove("col-sp-hide");pp.classList.add("col-sp-hide");t2.classList.add("active");t1.classList.remove("active")}}
-function atab(w){const pp=$("ap-pass"),pq=$("ap-qs"),t1=$("at1"),t2=$("at2");if(w==="pass"){pp.classList.remove("col-sp-hide");pq.classList.add("col-sp-hide");t1.classList.add("active");t2.classList.remove("active")}else{pq.classList.remove("col-sp-hide");pp.classList.add("col-sp-hide");t2.classList.add("active");t1.classList.remove("active")}}
-
-// ================================================================
-// ANIMATIONS
-// ================================================================
-function showToast(msg,isErr=false){
-  const t=$("toast");t.textContent=msg;t.style.background=isErr?"var(--ng)":"var(--ok)";t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800);
-}
-function launchConfetti(pct){
-  if(pct<70)return;const wrap=$("confetti-wrap");wrap.innerHTML="";
-  const colors=["#fbbf24","#34d399","#60a5fa","#f472b6","#a78bfa","#fb923c"];
-  const count=pct>=90?60:35;
-  for(let i=0;i<count;i++){
-    const p=mk("div","confetti-piece");
-    p.style.cssText=`left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-delay:${Math.random()*.8}s;animation-duration:${1.2+Math.random()*.8}s;border-radius:${Math.random()>.5?"50%":"2px"}`;
-    wrap.appendChild(p);
-  }
-  setTimeout(()=>wrap.innerHTML="",2500);
-}
-// リップルエフェクト
-document.addEventListener("click",e=>{
-  const btn=e.target.closest(".btn-start,.btn-pri,.btn-gen,.hd-end");
-  if(!btn)return;
-  const ripple=mk("span");const rect=btn.getBoundingClientRect();const size=Math.max(rect.width,rect.height);
-  ripple.style.cssText=`position:absolute;border-radius:50%;background:rgba(255,255,255,.4);width:${size}px;height:${size}px;top:${e.clientY-rect.top-size/2}px;left:${e.clientX-rect.left-size/2}px;transform:scale(0);animation:rippleSplash .5s ease-out forwards;pointer-events:none`;
-  if(getComputedStyle(btn).position==="static")btn.style.position="relative";
-  btn.style.overflow="hidden";btn.appendChild(ripple);setTimeout(()=>ripple.remove(),600);
-});
-// ripple CSS
-const rStyle=mk("style");rStyle.textContent="@keyframes rippleSplash{to{transform:scale(2.5);opacity:0}}";document.head.appendChild(rStyle);
 </script>
 </body>
 </html>
