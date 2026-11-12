@@ -2387,9 +2387,9 @@ $("btn-sent-start").onclick=async()=>{
   A.s.from=parseInt($("s-from").value);A.s.to=parseInt($("s-to").value);
   const words=getWordList(A.s.book).filter(w=>w.n>=A.s.from&&w.n<=A.s.to);
   if(!words.length){alert("指定範囲に単語がありません");return}
-  A.sentWords=words;
+  A.sentWords=words.map(w=>({...w,word:w.w||w.word||"",meaning:w.m||w.meaning||""}));
   go("s-gen");$("gen-msg").textContent="AIが例文を作成中…";
-  try{const d=await callAI(buildSentPrompt(words.slice(0,20)),3000);A.sentData=d;renderSent();go("s-sent")}
+  try{const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);A.sentData=d;renderSent();go("s-sent")}
   catch(e){go("s-sent-set");alert("エラー: "+e.message)}
 };
 $("btn-sent-new").onclick=async()=>{
@@ -2402,16 +2402,18 @@ function renderSent(){
   const list=$("sent-word-list");list.innerHTML="";
   const sentences=A.sentData?.sentences||[];
   sentences.forEach((s,i)=>{
-    const w=A.sentWords.find(x=>x.word===s.word);
+    const w=A.sentWords.find(x=>(x.word||x.w||"")===s.word);
     const card=mk("div","vocab-q-card");
-    const hd=div("vq-hd",`${s.word} （${w?.meaning||""}）`);
+    const meaning=w?.meaning||w?.m||"";
+    const hd=div("vq-hd",`${s.word} （${meaning}）`);
     card.appendChild(hd);
     const body=div("vq-body");
     // 例文（対象単語を長押しで意味表示）
     const sentEl=mk("div","ex-sent");
-    const parts=s.sentence.split(new RegExp(`\\b(${s.word})\\b`,"gi"));
+    const safeWord=(s.word||"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    const parts=safeWord ? s.sentence.split(new RegExp(`\\b(${safeWord})\\b`,"gi")) : [s.sentence];
     parts.forEach(p=>{
-      if(p.toLowerCase()===s.word.toLowerCase()){
+      if(p&&s.word&&p.toLowerCase()===s.word.toLowerCase()){
         const sp=mk("span","ex-word-span",p);
         const handleReveal=()=>{sp.classList.toggle("revealed");showWordTooltip(sp,s.word+" = "+(w?.meaning||""))}
         sp.addEventListener("dblclick",handleReveal);
@@ -2425,7 +2427,7 @@ function renderSent(){
     const acts=div();acts.style.cssText="display:flex;gap:.5rem;margin-top:.75rem";
     const oBtn=mk("button","btn-oboeta");oBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";oBtn.textContent="覚えた！";
     const fBtn=mk("button","btn-fuan");fBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";fBtn.textContent="不安…";
-    if(w){fBtn.onclick=()=>{addWeakWord({n:w.n||0,word:w.w||w.word||"",meaning:w.m||w.meaning||""});showToast("⚠️ 苦手リストに追加しました")}}
+    fBtn.onclick=()=>{addWeakWord({n:w?.n||0,word:s.word||"",meaning:meaning||""});showToast("⚠️ 苦手リストに追加しました")};
     acts.append(oBtn,fBtn);body.appendChild(acts);
     card.appendChild(body);list.appendChild(card);
   });
