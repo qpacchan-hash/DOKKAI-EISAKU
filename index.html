@@ -2651,6 +2651,337 @@ function renderSent(){
     card.appendChild(body);list.appendChild(card);
   });
 }
+
+// ================================================================
+// TOAST & CONFETTI & UTILS
+// ================================================================
+function showToast(msg,isErr=false){
+  const t=document.getElementById("toast");
+  if(!t)return;
+  t.textContent=msg;t.style.background=isErr?"var(--ng)":"var(--ok)";
+  t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800);
+}
+
+function launchConfetti(pct){
+  if(pct<70)return;
+  const wrap=document.getElementById("confetti-wrap");
+  if(!wrap)return;
+  wrap.innerHTML="";
+  const colors=["#fbbf24","#34d399","#60a5fa","#f472b6","#a78bfa","#fb923c"];
+  const count=pct>=90?60:35;
+  for(let i=0;i<count;i++){
+    const p=document.createElement("div");p.className="confetti-piece";
+    p.style.cssText=`left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-delay:${Math.random()*.8}s;animation-duration:${1.2+Math.random()*.8}s;border-radius:${Math.random()>.5?"50%":"2px"}`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>{wrap.innerHTML=""},2500);
+}
+
+function showWordTooltip(el,text){
+  const tt=document.getElementById("tooltip");
+  if(!tt)return;
+  tt.textContent=text;tt.style.display="block";
+  const rect=el.getBoundingClientRect();
+  tt.style.left=rect.left+"px";tt.style.top=(rect.top-36+window.scrollY)+"px";
+  setTimeout(()=>{tt.style.display="none"},2000);
+}
+
+// ================================================================
+// 苦手単語リスト
+// ================================================================
+function getWeakWords(){
+  try{return JSON.parse(localStorage.getItem("weak_words_v4")||"[]")}catch{return[]}
+}
+function setWeakWords(arr){
+  try{localStorage.setItem("weak_words_v4",JSON.stringify(arr))}catch{}
+}
+function addWeakWord(w){
+  const list=getWeakWords();
+  if(!list.find(x=>x.word===w.word&&x.meaning===w.meaning)){
+    list.push({no:w.n||0,word:w.word||w.w||"",meaning:w.meaning||w.m||""});
+    setWeakWords(list);
+  }
+}
+function renderWeakList(){
+  const list=getWeakWords();
+  const el=document.getElementById("weak-list");
+  if(!el)return;
+  el.innerHTML="";
+  if(!list.length){
+    el.innerHTML='<div class="weak-row" style="justify-content:center;color:var(--ink3)">苦手単語はまだありません</div>';
+    return;
+  }
+  list.forEach((w,i)=>{
+    const row=document.createElement("div");row.className="weak-row";
+    const num=document.createElement("span");num.className="weak-num";num.textContent=String(w.no);
+    const word=document.createElement("span");word.className="weak-word";word.textContent=w.word;
+    const mean=document.createElement("span");mean.className="weak-mean";mean.textContent=w.meaning;
+    const del=document.createElement("span");del.className="weak-del";del.textContent="削除";
+    del.onclick=()=>{const all=getWeakWords();all.splice(i,1);setWeakWords(all);renderWeakList()};
+    row.append(num,word,mean,del);el.appendChild(row);
+  });
+}
+
+function startWeakCard(){
+  const list=getWeakWords();
+  if(!list.length){alert("苦手単語リストが空です");return}
+  A.weakCardWords=[...list].sort(()=>Math.random()-.5);
+  A.weakCardIdx=0;renderWeakCard();go("s-weak-card");
+}
+
+function renderWeakCard(){
+  const raw=A.weakCardWords[A.weakCardIdx];if(!raw)return;
+  const w={word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""};
+  const prog=document.getElementById("weak-card-progress");
+  if(prog)prog.textContent=`${A.weakCardIdx+1}/${A.weakCardWords.length}`;
+  const cnt=document.getElementById("weak-card-counter");
+  if(cnt)cnt.textContent=`${A.weakCardIdx+1} / ${A.weakCardWords.length}`;
+  const fw=document.getElementById("wcard-front-word");if(fw)fw.textContent=w.word;
+  const bm=document.getElementById("wcard-back-mean");if(bm)bm.textContent=w.meaning;
+  const fi=document.getElementById("weak-flash-inner");if(fi)fi.classList.remove("flipped");
+}
+function flipWeakCard(){
+  const fi=document.getElementById("weak-flash-inner");if(fi)fi.classList.toggle("flipped");
+}
+function prevWeakCard(){if(A.weakCardIdx>0){A.weakCardIdx--;renderWeakCard()}}
+function nextWeakCard(){if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}}
+function weakCardOboeta(){
+  const w=A.weakCardWords[A.weakCardIdx];
+  const all=getWeakWords();
+  const idx=all.findIndex(x=>(x.word||x.w)===(w.word||w.w));
+  if(idx>=0){all.splice(idx,1);setWeakWords(all)}
+  showToast("✅ リストから削除しました！");
+  if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
+  else{go("s-weak");renderWeakList();showToast("🎉 すべて完了！")}
+}
+function weakCardFuan(){
+  showToast("📌 引き続き練習しよう");
+  if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
+}
+
+// ================================================================
+// 中断・ホーム確認
+// ================================================================
+function confirmAbort(backScreen){
+  if(confirm("解答を中断しますか？（現在の解答は保存されません）")){
+    clearInterval(A.tiv);A.tOn=false;go(backScreen);
+  }
+}
+function confirmHome(){
+  if(confirm("ホームへ戻りますか？（現在の解答は保存されません）")){
+    clearInterval(A.tiv);A.tOn=false;
+    A.qdata=null;A.uans={};A.wrong=[];A.wdata=null;A.wans="";go("s-top");
+  }
+}
+
+// ================================================================
+// 解答解説: 本文トグル
+// ================================================================
+function togglePassage(){
+  const body=document.getElementById("pass-toggle-body");
+  const icon=document.getElementById("pass-toggle-icon");
+  const lbl=document.getElementById("pass-toggle-lbl");
+  const isOpen=body.classList.toggle("open");
+  icon.textContent=isOpen?"▲":"▼";
+  lbl.textContent=isOpen?"📄 本文を非表示":"📄 本文を表示する";
+}
+
+// ================================================================
+// SP TABS
+// ================================================================
+function rtab(w){
+  const pp=document.getElementById("rp-pass"),pq=document.getElementById("rp-qs");
+  const t1=document.getElementById("rt1"),t2=document.getElementById("rt2");
+  if(w==="pass"){
+    pp.classList.remove("col-sp-hide");pq.classList.add("col-sp-hide");
+    t1.classList.add("active");t2.classList.remove("active");
+  }else{
+    pq.classList.remove("col-sp-hide");pp.classList.add("col-sp-hide");
+    t2.classList.add("active");t1.classList.remove("active");
+  }
+}
+function wtab(w){
+  const pp=document.getElementById("pane-wprm"),pa=document.getElementById("pane-wans");
+  const t1=document.getElementById("wt1"),t2=document.getElementById("wt2");
+  if(w==="prm"){
+    pp.classList.remove("col-sp-hide");pa.classList.add("col-sp-hide");
+    t1.classList.add("active");t2.classList.remove("active");
+  }else{
+    pa.classList.remove("col-sp-hide");pp.classList.add("col-sp-hide");
+    t2.classList.add("active");t1.classList.remove("active");
+  }
+}
+function atab(w){
+  const pp=document.getElementById("ap-pass"),pq=document.getElementById("ap-qs");
+  const t1=document.getElementById("at1"),t2=document.getElementById("at2");
+  if(w==="pass"){
+    pp.classList.remove("col-sp-hide");pq.classList.add("col-sp-hide");
+    t1.classList.add("active");t2.classList.remove("active");
+  }else{
+    pq.classList.remove("col-sp-hide");pp.classList.add("col-sp-hide");
+    t2.classList.add("active");t1.classList.remove("active");
+  }
+}
+
+// ================================================================
+// 保存機能
+// ================================================================
+function getSaved(){try{return JSON.parse(localStorage.getItem("saved_v4")||"[]")}catch{return[]}}
+function setSaved(arr){try{localStorage.setItem("saved_v4",JSON.stringify(arr))}catch{alert("保存容量が不足しています")}}
+
+document.getElementById("btn-r-save").onclick=()=>saveReading(false);
+document.getElementById("btn-a-save").onclick=()=>saveReading(true);
+document.getElementById("btn-w-save").onclick=()=>saveWriting();
+
+function saveReading(isAnalog){
+  const saved=getSaved();
+  let score=null;
+  if(!isAnalog){
+    const qs=activeQs();
+    const cor=qs.filter(q=>{
+      const ua=(A.uans[q.id]||"").trim();
+      return q.type==="choice"||q.type==="order"
+        ?ua.charAt(0)===(q.answer||"").trim().charAt(0)
+        :ua.length>0;
+    }).length;
+    score={correct:cor,total:qs.length};
+  }else{
+    let total=0,maxTotal=0;
+    document.querySelectorAll(".pts-inp").forEach(inp=>{
+      const pts=parseInt(inp.dataset.pts||0);
+      total+=Math.max(0,Math.min(parseInt(inp.value||0),pts));
+      maxTotal+=pts;
+    });
+    score={correct:total,total:maxTotal,isPoints:true};
+  }
+  saved.unshift({
+    id:Date.now(),type:"reading",mode:isAnalog?"analog":"digital",
+    savedAt:new Date().toLocaleString("ja-JP"),
+    settings:{...A.r},qdata:A.qdata,uans:{...A.uans},
+    wrong:[...A.wrong],score,elapsed:A.eSec,
+    label:(GJ[A.r.genre]||"読解")+" ／ "+(A.r.difficulty||"").toUpperCase()
+      +" ／ "+(A.r.school==="junior"?"中学":"高校")
+      +(A.r.grade==="ronin"?"浪人":A.r.grade+"年")
+  });
+  setSaved(saved.slice(0,50));showToast("📂 保存しました！");
+}
+function saveWriting(){
+  const saved=getSaved();
+  saved.unshift({
+    id:Date.now(),type:"writing",savedAt:new Date().toLocaleString("ja-JP"),
+    settings:{...A.w},wdata:A.wdata,wans:A.wans,elapsed:A.eSec,
+    label:(WTYPE_JP[A.w.wtype]||"英作文")+" ／ "+(A.w.school==="junior"?"中学":"高校")
+      +(A.w.grade==="ronin"?"浪人":A.w.grade+"年")
+  });
+  setSaved(saved.slice(0,50));showToast("📂 保存しました！");
+}
+
+function renderSaved(){
+  const saved=getSaved();
+  const list=document.getElementById("saved-list");
+  list.innerHTML="";
+  const f=A.savedFilter;
+  const filtered=saved.filter(item=>{
+    if(f.type!=="all"&&item.type!==f.type)return false;
+    if(f.school!=="all"&&item.settings?.school!==f.school)return false;
+    return true;
+  });
+  if(!filtered.length){
+    list.innerHTML='<div class="saved-empty">保存した問題はありません。</div>';
+    return;
+  }
+  filtered.forEach(item=>{
+    const card=document.createElement("div");card.className="saved-item";
+    const hd=document.createElement("div");hd.className="si-hd";
+    const left=document.createElement("div");
+    const ttl=document.createElement("div");ttl.className="si-ttl";ttl.textContent=item.label||"問題";
+    const meta=document.createElement("div");meta.className="si-meta";meta.textContent="保存日時："+item.savedAt;
+    left.append(ttl,meta);hd.appendChild(left);
+    const tags=document.createElement("div");tags.className="si-tags";
+    const t1=document.createElement("span");t1.className="tag";t1.textContent=item.type==="reading"?"📖 読解":"✏️ 英作文";
+    tags.appendChild(t1);
+    if(item.score){
+      const t2=document.createElement("span");t2.className="tag";
+      t2.textContent=item.score.isPoints?`${item.score.correct}/${item.score.total}点`:`${item.score.correct}/${item.score.total}`;
+      tags.appendChild(t2);
+    }
+    if(item.elapsed){const t3=document.createElement("span");t3.className="tag";t3.textContent="⏱ "+fmt(item.elapsed);tags.appendChild(t3)}
+    hd.appendChild(tags);card.appendChild(hd);
+    hd.onclick=()=>body.classList.toggle("open");
+    const body=document.createElement("div");body.className="si-body";
+    if(item.type==="reading"&&item.qdata){
+      const prev=document.createElement("div");prev.className="si-preview";
+      prev.textContent=(item.qdata.passage||"").slice(0,120)+"…";
+      body.appendChild(prev);
+    }else if(item.type==="writing"&&item.wdata){
+      const prev=document.createElement("div");prev.className="si-preview";
+      prev.textContent=item.wdata.prompt||"";body.appendChild(prev);
+    }
+    const acts=document.createElement("div");acts.className="si-acts";
+    if(item.type==="reading"&&item.qdata){
+      const playBtn=document.createElement("button");playBtn.className="chip grn";playBtn.textContent="▶ 解く";
+      playBtn.onclick=e=>{
+        e.stopPropagation();
+        A.qdata=item.qdata;A.uans={};A.wrong=[];A.redoIds=null;A.r={...item.settings};
+        document.getElementById("rs-badge").textContent=item.label||"読解";
+        document.getElementById("rs-min").textContent=item.qdata.targetMinutes||10;
+        go("s-rmode");
+      };
+      const exBtn=document.createElement("button");exBtn.className="chip";exBtn.textContent="💡 解説";
+      exBtn.onclick=e=>{
+        e.stopPropagation();
+        A.qdata=item.qdata;A.uans=item.uans||{};A.wrong=item.wrong||[];
+        renderExpl(false);go("s-expl");
+      };
+      acts.append(playBtn,exBtn);
+    }
+    const delBtn=document.createElement("button");delBtn.className="chip red";delBtn.textContent="🗑 削除";
+    delBtn.onclick=e=>{
+      e.stopPropagation();
+      if(!confirm("削除しますか？"))return;
+      const all=getSaved();all.splice(all.findIndex(x=>x.id===item.id),1);
+      setSaved(all);renderSaved();
+    };
+    acts.appendChild(delBtn);body.appendChild(acts);card.appendChild(body);list.appendChild(card);
+  });
+}
+
+// ================================================================
+// DOMContentLoaded
+// ================================================================
+document.addEventListener("DOMContentLoaded",()=>{
+  // flash-card クリック（ボタン以外）でflip
+  const fc=document.getElementById("flash-card");
+  if(fc){
+    fc.addEventListener("click",(e)=>{
+      if(e.target.closest("button"))return;
+      flipCard();
+    });
+  }
+  const wfc=document.getElementById("weak-flash-card");
+  if(wfc){
+    wfc.addEventListener("click",(e)=>{
+      if(e.target.closest("button"))return;
+      flipWeakCard();
+    });
+  }
+  setupCardButtons();
+});
+
+// ================================================================
+// リップルエフェクト
+// ================================================================
+document.addEventListener("click",e2=>{
+  const btn=e2.target.closest(".btn-start,.btn-pri,.btn-gen,.hd-end");
+  if(!btn)return;
+  const ripple=document.createElement("span");
+  const rect=btn.getBoundingClientRect();
+  const size=Math.max(rect.width,rect.height);
+  ripple.style.cssText=`position:absolute;border-radius:50%;background:rgba(255,255,255,.4);width:${size}px;height:${size}px;top:${e2.clientY-rect.top-size/2}px;left:${e2.clientX-rect.left-size/2}px;transform:scale(0);animation:rippleSplash .5s ease-out forwards;pointer-events:none`;
+  if(getComputedStyle(btn).position==="static")btn.style.position="relative";
+  btn.style.overflow="hidden";btn.appendChild(ripple);
+  setTimeout(()=>ripple.remove(),600);
+});
 </script>
 </body>
 </html>
