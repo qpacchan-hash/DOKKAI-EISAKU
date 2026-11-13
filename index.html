@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>英語練習システム</title>
-<script src="words.js"></script>
+<script src="words.js?v=1794550540"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1171,7 +1171,7 @@ input,textarea{font-family:var(--fu)}
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area">
-  <div class="flash-card" id="flash-card" onclick="flipCard()">
+  <div class="flash-card" id="flash-card" onclick="flipCard(event)">
     <div class="flash-inner" id="flash-inner">
       <div class="flash-front">
         <div class="flash-side" id="card-front-side">表</div>
@@ -1185,13 +1185,13 @@ input,textarea{font-family:var(--fu)}
     </div>
   </div>
   <div class="card-nav">
-    <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
+    <button class="chip" id="card-prev" onclick="event.stopPropagation();prevCard()">◀ 前へ</button>
     <span class="card-counter" id="card-counter">1 / 1</span>
-    <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
+    <button class="chip" id="card-next" onclick="event.stopPropagation();nextCard()">次へ ▶</button>
   </div>
   <div class="card-acts">
-    <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
-    <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
+    <button class="btn-oboeta" onclick="event.stopPropagation();cardOboeta()">覚えた！ ✓</button>
+    <button class="btn-fuan" onclick="event.stopPropagation();cardFuan()">不安… △</button>
   </div>
   <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
 </div>
@@ -1263,7 +1263,7 @@ input,textarea{font-family:var(--fu)}
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area">
-  <div class="flash-card" id="weak-flash-card" onclick="flipWeakCard()">
+  <div class="flash-card" id="weak-flash-card" onclick="flipWeakCard(event)">
     <div class="flash-inner" id="weak-flash-inner">
       <div class="flash-front">
         <div class="flash-side">英語</div>
@@ -1277,13 +1277,13 @@ input,textarea{font-family:var(--fu)}
     </div>
   </div>
   <div class="card-nav">
-    <button class="chip" onclick="prevWeakCard()">◀ 前へ</button>
+    <button class="chip" onclick="event.stopPropagation();prevWeakCard()">◀ 前へ</button>
     <span class="card-counter" id="weak-card-counter">1 / 1</span>
-    <button class="chip" onclick="nextWeakCard()">次へ ▶</button>
+    <button class="chip" onclick="event.stopPropagation();nextWeakCard()">次へ ▶</button>
   </div>
   <div class="card-acts">
-    <button class="btn-oboeta" onclick="weakCardOboeta()">覚えた！ →リストから削除</button>
-    <button class="btn-fuan" onclick="weakCardFuan()">まだ不安…</button>
+    <button class="btn-oboeta" onclick="event.stopPropagation();weakCardOboeta()">覚えた！ →リストから削除</button>
+    <button class="btn-fuan" onclick="event.stopPropagation();weakCardFuan()">まだ不安…</button>
   </div>
 </div>
 </div>
@@ -1468,7 +1468,7 @@ function updateVRange(prefix){
   const maxNo=words[words.length-1]?.n||1;
   const minNo=words[0]?.n||1;
   const infoId=`${prefix}-range-info`;
-  if($(infoId)) $(infoId).textContent=`利用可能範囲: No.${minNo}〜No.${maxNo}（${words.length}語）`;
+  if($(infoId)) $(infoId).textContent=`利用可能: No.${minNo}〜No.${maxNo}（収録${words.length}語・番号は連続していません）`;
   if(prefix==="v"){chkVTest()}
   else if(prefix==="c"){chkCard()}
   else {chkSent()}
@@ -2349,8 +2349,9 @@ function renderCard(){
   const raw=A.cardWords[A.cardIdx];if(!raw)return;
   // words.js の形式は {n, w, m} → word/meaning に変換
   const w={word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""};
-  $("card-progress").textContent=`${A.cardIdx+1}/${A.cardWords.length}`;
-  $("card-counter").textContent=`${A.cardIdx+1} / ${A.cardWords.length}`;
+  const progTxt=`${A.cardIdx+1} / ${A.cardWords.length}枚`;
+  const progEl=$("card-progress");if(progEl)progEl.textContent=progTxt;
+  const cntEl=$("card-counter");if(cntEl)cntEl.textContent=progTxt;
   $("flash-inner").classList.remove("flipped");
   if(A.c.dir==="e2j"||A.c.dir===""){
     $("card-front-side").textContent="英語";$("card-front-word").textContent=w.word;
@@ -2362,7 +2363,10 @@ function renderCard(){
   $("card-status").textContent=A.cardFuan.has(A.cardIdx)?"🔖 不安リストに追加済み":"";
   $("card-prev").disabled=A.cardIdx===0;$("card-next").disabled=A.cardIdx>=A.cardWords.length-1;
 }
-function flipCard(){$("flash-inner").classList.toggle("flipped")}
+function flipCard(e){
+  if(e)e.stopPropagation();
+  const fi=$("flash-inner");if(fi)fi.classList.toggle("flipped");
+}
 function prevCard(){if(A.cardIdx>0){A.cardIdx--;renderCard()}}
 function nextCard(){
   if(A.cardIdx<A.cardIdx.length-1){A.cardIdx++;renderCard()}
@@ -2403,7 +2407,7 @@ function restartFuanCard(){
   A.cardIdx=0;A.cardFuan=new Set();
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="flipCard()">
+    <div class="flash-card" id="flash-card" onclick="flipCard(event)">
       <div class="flash-inner" id="flash-inner">
         <div class="flash-front">
           <div class="flash-side" id="card-front-side">表</div>
@@ -2417,13 +2421,13 @@ function restartFuanCard(){
       </div>
     </div>
     <div class="card-nav">
-      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
+      <button class="chip" id="card-prev" onclick="event.stopPropagation();prevCard()">◀ 前へ</button>
       <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
+      <button class="chip" id="card-next" onclick="event.stopPropagation();nextCard()">次へ ▶</button>
     </div>
     <div class="card-acts">
-      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
-      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
+      <button class="btn-oboeta" onclick="event.stopPropagation();cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="event.stopPropagation();cardFuan()">不安… △</button>
     </div>
     <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
   `;
@@ -2436,7 +2440,7 @@ function restartCard(){
   // card-areaを再構築
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="flipCard()">
+    <div class="flash-card" id="flash-card" onclick="flipCard(event)">
       <div class="flash-inner" id="flash-inner">
         <div class="flash-front">
           <div class="flash-side" id="card-front-side">表</div>
@@ -2450,13 +2454,13 @@ function restartCard(){
       </div>
     </div>
     <div class="card-nav">
-      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
+      <button class="chip" id="card-prev" onclick="event.stopPropagation();prevCard()">◀ 前へ</button>
       <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
+      <button class="chip" id="card-next" onclick="event.stopPropagation();nextCard()">次へ ▶</button>
     </div>
     <div class="card-acts">
-      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
-      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
+      <button class="btn-oboeta" onclick="event.stopPropagation();cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="event.stopPropagation();cardFuan()">不安… △</button>
     </div>
     <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
   `;
