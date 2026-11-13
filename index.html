@@ -1392,18 +1392,18 @@ $("btn-save").onclick=()=>{
 // ================================================================
 // TOP NAVIGATION
 // ================================================================
-$("mc-read").onclick=()=>go("s-read-modesel");
-$("mc-write").onclick=()=>go("s-write-modesel");
+$("mc-read").onclick=()=>{resetReadSet();go("s-read-modesel");};
+$("mc-write").onclick=()=>{resetWriteSet();go("s-write-modesel");};
 $("mc-vocab").onclick=()=>go("s-vocab-top");
 $("mc-saved").onclick=()=>{go("s-saved");setTimeout(renderSaved,50)};
 
 // 読解モード選択
-$("btn-read-test").onclick=()=>{A.rMode="test";$("read-set-title").textContent="読解 設定（テストモード）";$("read-set-back").onclick=()=>go("s-read-modesel");resetReadSet();go("s-read-set")};
-$("btn-read-kunshu").onclick=()=>{A.rMode="kunshu";$("read-set-title").textContent="読解 設定（特訓モード）";$("read-set-back").onclick=()=>go("s-read-modesel");resetReadSet();go("s-read-set")};
+$("btn-read-test").onclick=()=>{A.rMode="test";$("read-set-title").textContent="読解 設定（テストモード）";$("read-set-back").onclick=()=>go("s-read-modesel");go("s-read-set")};
+$("btn-read-kunshu").onclick=()=>{A.rMode="kunshu";$("read-set-title").textContent="読解 設定（特訓モード）";$("read-set-back").onclick=()=>go("s-read-modesel");go("s-read-set")};
 
 // 英作文モード選択
-$("btn-write-test").onclick=()=>{A.wMode="test";$("write-set-title").textContent="英作文 設定（テストモード）";$("write-set-back").onclick=()=>go("s-write-modesel");resetWriteSet();go("s-write-set")};
-$("btn-write-kunshu").onclick=()=>{A.wMode="kunshu";$("write-set-title").textContent="英作文 設定（特訓モード）";$("write-set-back").onclick=()=>go("s-write-modesel");resetWriteSet();go("s-write-set")};
+$("btn-write-test").onclick=()=>{A.wMode="test";$("write-set-title").textContent="英作文 設定（テストモード）";$("write-set-back").onclick=()=>go("s-write-modesel");go("s-write-set")};
+$("btn-write-kunshu").onclick=()=>{A.wMode="kunshu";$("write-set-title").textContent="英作文 設定（特訓モード）";$("write-set-back").onclick=()=>go("s-write-modesel");go("s-write-set")};
 
 // 英単語TOP
 $("btn-vocab-test").onclick=()=>{
