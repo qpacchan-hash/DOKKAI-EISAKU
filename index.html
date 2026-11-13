@@ -426,6 +426,73 @@ input,textarea{font-family:var(--fu)}
 .hint-keywords{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
 .hint-kw{background:var(--warnl);border:1px solid var(--warn);border-radius:4px;padding:.2rem .55rem;font-size:.8rem;color:var(--ink)}
 .hint-kw strong{color:var(--warn);font-family:var(--fe)}
+
+/* ── AI質問バー ── */
+.ai-ask-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:2px solid var(--acc);
+  box-shadow:0 -4px 20px rgba(23,32,58,.12);
+  z-index:300;padding:.75rem 1rem;
+  display:none;flex-direction:column;gap:.5rem;
+}
+.ai-ask-bar.show{display:flex}
+.ai-ask-toggle{
+  position:fixed;bottom:1rem;right:1rem;
+  background:var(--acc);color:#fff;border:none;
+  border-radius:50%;width:52px;height:52px;
+  font-size:1.4rem;cursor:pointer;
+  box-shadow:0 4px 16px rgba(30,64,175,.4);
+  display:none;align-items:center;justify-content:center;
+  z-index:301;transition:.2s;
+}
+.ai-ask-toggle.show{display:flex}
+.ai-ask-toggle:hover{transform:scale(1.1)}
+.ai-chat-history{
+  max-height:260px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:.5rem;
+  padding:.25rem 0;
+}
+.ai-chat-history:empty::before{
+  content:"質問を入力してください。問題・解説の内容を踏まえて答えます。";
+  font-size:.82rem;color:var(--ink3);font-style:italic;
+}
+.ai-bubble{
+  padding:.6rem .9rem;border-radius:var(--rl);font-size:.87rem;line-height:1.65;
+  max-width:90%;
+}
+.ai-bubble.user{
+  background:var(--accl);color:var(--ink);align-self:flex-end;
+  border-bottom-right-radius:4px;
+}
+.ai-bubble.ai{
+  background:var(--surf);border:1px solid var(--rule);color:var(--ink);
+  align-self:flex-start;border-bottom-left-radius:4px;
+}
+.ai-bubble.thinking{color:var(--ink3);font-style:italic}
+.ai-ask-row{display:flex;gap:.5rem;align-items:flex-end}
+.ai-ask-inp{
+  flex:1;border:1.5px solid var(--rule);border-radius:var(--r);
+  padding:.55rem .85rem;font-size:.9rem;font-family:var(--fu);
+  resize:none;min-height:40px;max-height:100px;line-height:1.5;
+  background:var(--surf);color:var(--ink);
+}
+.ai-ask-inp:focus{outline:none;border-color:var(--acc);background:#fff}
+.ai-ask-send{
+  background:var(--acc);color:#fff;border:none;border-radius:var(--r);
+  padding:.55rem 1rem;font-size:.9rem;font-weight:600;cursor:pointer;
+  white-space:nowrap;flex-shrink:0;
+}
+.ai-ask-send:hover{background:var(--acch)}
+.ai-ask-send:disabled{opacity:.4;cursor:not-allowed}
+.ai-bar-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:.8rem;font-weight:700;color:var(--acc);
+}
+.ai-bar-close{
+  background:none;border:none;cursor:pointer;
+  font-size:1.1rem;color:var(--ink3);padding:.1rem .3rem;
+}
+.ai-bar-close:hover{color:var(--ng)}
 </style>
 </head>
 <body>
@@ -2985,6 +3052,138 @@ document.addEventListener("click",e2=>{
   btn.style.overflow="hidden";btn.appendChild(ripple);
   setTimeout(()=>ripple.remove(),600);
 });
+
+// ================================================================
+// AI質問バー
+// ================================================================
+const AI_BAR_SCREENS = new Set([
+  "s-rscore","s-ascore","s-expl","s-expl-sel",
+  "s-wscore","s-redo-sel","s-redo-wrong-start"
+]);
+let aiChatHistory = [];
+let _goOrig = null;
+
+function buildAiContext(){
+  let ctx = "";
+  if(A.qdata){
+    ctx += "[Reading Passage]\n" + (A.qdata.passage||"") + "\n\n";
+    ctx += "[Questions & Answers]\n";
+    (A.qdata.questions||[]).forEach((q,i)=>{
+      ctx += `Q${i+1}: ${q.question}\n`;
+      ctx += `Correct: ${q.answer||""}\n`;
+      const ua=(A.uans[q.id]||"").trim();
+      if(ua) ctx += `Student: ${ua}\n`;
+      if(q.explanation) ctx += `Explanation: ${q.explanation}\n`;
+      ctx += "\n";
+    });
+  }
+  if(A.wdata){
+    ctx += "[Writing Question]\n"+(A.wdata.prompt||"")+"\n\n";
+    ctx += "[Sample Answer]\n"+(A.wdata.sampleAnswer||"")+"\n\n";
+    ctx += "[Student's Answer]\n"+(A.wans||"")+"\n\n";
+  }
+  return ctx;
+}
+
+function buildAiQuestion(userMsg){
+  const ctx=buildAiContext();
+  const history=aiChatHistory.slice(-6).map(m=>
+    m.role==="user"?`Student: ${m.content}`:`AI: ${m.content}`
+  ).join("\n");
+  return [
+    "You are a helpful English learning assistant for Japanese students.",
+    "Answer questions about the reading passage, questions, and explanations.",
+    "Respond in Japanese. Be concise and educational.",
+    "",
+    ctx?"[Context]\n"+ctx:"",
+    history?"[Chat History]\n"+history:"",
+    "",
+    "[Student's Question]",
+    userMsg,
+    "",
+    'Output ONLY a JSON object: {"answer": "日本語で回答"}'
+  ].filter(Boolean).join("\n");
+}
+
+function showAiBar(show){
+  const toggle=document.getElementById("ai-ask-toggle");
+  const bar=document.getElementById("ai-ask-bar");
+  if(toggle)toggle.classList.toggle("show",show);
+  if(!show&&bar)bar.classList.remove("show");
+  if(!show){
+    aiChatHistory=[];
+    const hist=document.getElementById("ai-chat-history");
+    if(hist)hist.innerHTML="";
+  }
+}
+
+function toggleAiBar(){
+  const bar=document.getElementById("ai-ask-bar");
+  if(!bar)return;
+  bar.classList.toggle("show");
+  if(bar.classList.contains("show")){
+    setTimeout(()=>{const inp=document.getElementById("ai-ask-inp");if(inp)inp.focus();},100);
+  }
+}
+
+async function sendAiQuestion(){
+  const inp=document.getElementById("ai-ask-inp");
+  const send=document.getElementById("ai-ask-send");
+  const hist=document.getElementById("ai-chat-history");
+  if(!inp||!send||!hist)return;
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value="";inp.style.height="40px";send.disabled=true;
+  const ub=document.createElement("div");ub.className="ai-bubble user";ub.textContent=msg;hist.appendChild(ub);
+  const tb=document.createElement("div");tb.className="ai-bubble ai thinking";tb.textContent="考え中…";hist.appendChild(tb);
+  hist.scrollTop=hist.scrollHeight;
+  aiChatHistory.push({role:"user",content:msg});
+  try{
+    const d=await callAI(buildAiQuestion(msg),800);
+    const ans=d.answer||"回答を生成できませんでした。";
+    tb.className="ai-bubble ai";tb.textContent=ans;
+    aiChatHistory.push({role:"ai",content:ans});
+  }catch(e){
+    tb.className="ai-bubble ai";tb.textContent="エラー: "+e.message;
+  }
+  send.disabled=false;hist.scrollTop=hist.scrollHeight;
+}
+
+// go関数をオーバーライドしてAIバー表示制御
+(function(){
+  const origGo=go;
+  go=function(id){
+    origGo(id);
+    showAiBar(AI_BAR_SCREENS.has(id));
+  };
+})();
+
+document.addEventListener("DOMContentLoaded",()=>{
+  const inp=document.getElementById("ai-ask-inp");
+  if(inp){
+    inp.addEventListener("input",()=>{
+      inp.style.height="40px";
+      inp.style.height=Math.min(inp.scrollHeight,100)+"px";
+    });
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAiQuestion();}
+    });
+  }
+});
+
 </script>
+
+<!-- AI質問バー（採点・解説画面で表示） -->
+<button class="ai-ask-toggle" id="ai-ask-toggle" onclick="toggleAiBar()">🤖</button>
+<div class="ai-ask-bar" id="ai-ask-bar">
+  <div class="ai-bar-hd">
+    <span>🤖 AIに質問する</span>
+    <button class="ai-bar-close" onclick="toggleAiBar()">✕</button>
+  </div>
+  <div class="ai-chat-history" id="ai-chat-history"></div>
+  <div class="ai-ask-row">
+    <textarea class="ai-ask-inp" id="ai-ask-inp" placeholder="この問題や解説について質問してください…" rows="1"></textarea>
+    <button class="ai-ask-send" id="ai-ask-send" onclick="sendAiQuestion()">送信</button>
+  </div>
+</div>
 </body>
 </html>
