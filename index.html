@@ -1551,9 +1551,10 @@ function buildRPrompt(){
     "",
     "[Requirements]",
     "- Write the passage in English",
-    "- ALL question text (question field) must be in Japanese",
-    "- ALL choice options must be in Japanese (or short English phrases when appropriate)",
-    "- ALL explanations must be in Japanese",
+    "- ALL question text (question field) MUST be written in ENGLISH",
+    "- ALL choice options must be in Japanese",
+    "- ALL explanations (explanation field) must be in Japanese",
+    "- The 'evidence' field (quoted sentence from passage) must be in English",
     "- Include 4-5 multiple choice questions and 1-2 free-response questions",
     "- Annotate difficult vocabulary in the notes field with Japanese explanations",
     isVis?"- Include a 'visual' field with a self-contained SVG representing the chart/table":"",
@@ -1739,6 +1740,11 @@ $("ws-btn").onclick=()=>{
 function renderQuiz(d,ids){
   $("quiz-lbl").textContent=(GJ[A.r.genre]||"読解")+" ／ "+(A.r.difficulty||"").toUpperCase();
   fillPass(d,"r");
+  // 問題画面では和訳ボタンを隠す（解説ページで表示）
+  const jaTBtn=$("btn-ja-toggle-pass");
+  if(jaTBtn)jaTBtn.style.display="none";
+  const jaPanel=$("r-pass-ja");
+  if(jaPanel){jaPanel.classList.remove("show");jaPanel.style.display="none"}
   A.tSec=(d.targetMinutes||10)*60;
   const qs=ids?d.questions.filter(q=>ids.includes(q.id)):d.questions;
   const l=$("r-qlist");l.innerHTML="";
@@ -1843,19 +1849,28 @@ function mkQCard(q,num){
   const hd=div("q-card-hd",`問 ${num}　（${typeLbl[q.type]||q.type}）`);
   wrap.appendChild(hd);
   const body=div("q-card-body");
+  // 設問は日本語のまま（英語化不要）
   body.appendChild(div("q-txt",q.question));
   if(q.type==="choice"||q.type==="order"||q.type==="word-order"){
-    const w=div("choices");
+    const choicesWrap=div("choices");
     (q.choices||[]).forEach(ch=>{
-      const b=mk("button","ch");b.textContent=ch;b.dataset.v=ch.charAt(0);
-      b.onclick=()=>{
-        if(!A.tOn)return;
-        w.querySelectorAll(".ch").forEach(x=>x.classList.remove("sel"));
-        b.classList.add("sel");A.uans[q.id]=b.dataset.v;
+      const b=mk("button","ch");b.textContent=ch;
+      const val=ch.charAt(0);b.dataset.v=val;
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        // このcard内の選択肢だけをリセット
+        choicesWrap.querySelectorAll(".ch").forEach(x=>x.classList.remove("sel"));
+        b.classList.add("sel");
+        A.uans[q.id]=val;
+        // 押したフィードバック
+        b.style.transform="scale(0.97)";
+        setTimeout(()=>{b.style.transform=""},150);
       };
-      w.appendChild(b);
+      // 既存の回答を復元
+      if(A.uans[q.id]===val)b.classList.add("sel");
+      choicesWrap.appendChild(b);
     });
-    body.appendChild(w);
+    body.appendChild(choicesWrap);
   }else{
     const ta=mk("textarea","q-ta");ta.placeholder="ここに回答を入力";
     ta.oninput=()=>{A.uans[q.id]=ta.value.trim()};
@@ -1870,6 +1885,9 @@ function mkQCard(q,num){
 function renderAnalogQuiz(d,ids){
   $("aquiz-lbl").textContent=(GJ[A.r.genre]||"読解")+" ／ "+(A.r.difficulty||"").toUpperCase()+" ／ 📝";
   fillPass(d,"a");
+  // アナログも和訳非表示
+  const aJa=$("a-pass-ja");
+  if(aJa){aJa.classList.remove("show");aJa.style.display="none"}
   A.tSec=(d.targetMinutes||10)*60;
   const qs=ids?d.questions.filter(q=>ids.includes(q.id)):d.questions;
   const l=$("a-qlist");l.innerHTML="";
@@ -2013,6 +2031,11 @@ $("btn-expl-all").onclick=()=>{renderExpl(false);go("s-expl")};
 $("btn-expl-wrong").onclick=()=>{renderExpl(true);go("s-expl")};
 
 function renderExpl(wrongOnly){
+  // 解説ページでは和訳を表示可能にする
+  const eJaBtn=$("btn-ja-toggle-pass");
+  if(eJaBtn)eJaBtn.style.display="";
+  const eJa=$("r-pass-ja");
+  if(eJa)eJa.style.display="";
   const qs=A.qdata.questions.filter(q=>wrongOnly?A.wrong.includes(q.id):true);
   const l=$("e-list");l.innerHTML="";
   const typeLbl={choice:"選択",free:"記述","translation-ja":"和訳","translation-en":"英訳",order:"並べ替え"};
@@ -2314,8 +2337,12 @@ $("btn-card-start").onclick=()=>{
   A.c.from=parseInt($("c-from").value);A.c.to=parseInt($("c-to").value);
   const words=getWordList(A.c.book).filter(w=>w.n>=A.c.from&&w.n<=A.c.to);
   if(!words.length){alert("指定範囲に単語がありません");return}
+  // シャッフルして全単語を使用
   A.cardWords=[...words].sort(()=>Math.random()-.5);
-  A.cardIdx=0;A.cardFuan=new Set();renderCard();go("s-card");
+  A.cardIdx=0;A.cardFuan=new Set();
+  // card-progress の最大値を設定
+  renderCard();go("s-card");
+  setTimeout(()=>showToast("📚 "+words.length+"語を読み込みました"),400);
 };
 
 function renderCard(){
@@ -2338,7 +2365,7 @@ function renderCard(){
 function flipCard(){$("flash-inner").classList.toggle("flipped")}
 function prevCard(){if(A.cardIdx>0){A.cardIdx--;renderCard()}}
 function nextCard(){
-  if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}
+  if(A.cardIdx<A.cardIdx.length-1){A.cardIdx++;renderCard()}
   else{showCardResult()}
 }
 function showCardResult(){
@@ -2435,12 +2462,31 @@ function restartCard(){
   `;
   renderCard();
 }
-function cardOboeta(){$("card-status").textContent="✅ 覚えた！";A.cardFuan.delete(A.cardIdx);setTimeout(nextCard,400)}
+function cardOboeta(){
+  const btn=document.querySelector(".btn-oboeta");
+  if(btn){btn.style.transform="scale(0.9)";setTimeout(()=>{btn.style.transform=""},200)}
+  const statusEl=$("card-status");
+  if(statusEl)statusEl.textContent="✅ 覚えた！";
+  A.cardFuan.delete(A.cardIdx);
+  setTimeout(()=>{
+    if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}
+    else{showCardResult()}
+  },350);
+}
 function cardFuan(){
-  A.cardFuan.add(A.cardIdx);
   const raw=A.cardWords[A.cardIdx];
+  A.cardFuan.add(A.cardIdx);
   addWeakWord({n:raw.n||0,word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""});
-  $("card-status").textContent="🔖 苦手リストに追加";showToast("⚠️ 苦手リストに追加しました");setTimeout(nextCard,400);
+  // ボタンアニメ
+  const btn=document.querySelector(".btn-fuan");
+  if(btn){btn.style.transform="scale(0.9)";setTimeout(()=>{btn.style.transform=""},200)}
+  const statusEl=$("card-status");
+  if(statusEl)statusEl.textContent="🔖 苦手リストに追加";
+  showToast("⚠️ 苦手リストに追加しました");
+  setTimeout(()=>{
+    if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}
+    else{showCardResult()}
+  },350);
 }
 
 // ================================================================
