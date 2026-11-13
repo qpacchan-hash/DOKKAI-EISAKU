@@ -1185,13 +1185,13 @@ input,textarea{font-family:var(--fu)}
     </div>
   </div>
   <div class="card-nav">
-    <button class="chip" id="card-prev">◀ 前へ</button>
+    <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
     <span class="card-counter" id="card-counter">1 / 1</span>
-    <button class="chip" id="card-next">次へ ▶</button>
+    <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
   </div>
   <div class="card-acts">
-    <button class="btn-oboeta" id="btn-oboeta">覚えた！ ✓</button>
-    <button class="btn-fuan" id="btn-fuan">不安… △</button>
+    <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+    <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
   </div>
   <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
 </div>
@@ -2451,16 +2451,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   setupCardButtons();
 });
 
-function setupCardButtons(){
-  const oboeta=document.getElementById("btn-oboeta");
-  const fuan=document.getElementById("btn-fuan");
-  const prev=document.getElementById("card-prev");
-  const next=document.getElementById("card-next");
-  if(oboeta){oboeta.onclick=(e)=>{e.stopPropagation();cardOboeta();}}
-  if(fuan){fuan.onclick=(e)=>{e.stopPropagation();cardFuan();}}
-  if(prev){prev.onclick=(e)=>{e.stopPropagation();prevCard();}}
-  if(next){next.onclick=(e)=>{e.stopPropagation();nextCard();}}
-}
+function setupCardButtons(){/* no-op: buttons use onclick attributes */}
 function prevCard(){
   if(A.cardIdx>0){A.cardIdx--;renderCard()}
 }
@@ -2517,13 +2508,13 @@ function restartFuanCard(){
       </div>
     </div>
     <div class="card-nav">
-      <button class="chip" id="card-prev">◀ 前へ</button>
+      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
       <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next">次へ ▶</button>
+      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
     </div>
     <div class="card-acts">
-      <button class="btn-oboeta" id="btn-oboeta">覚えた！ ✓</button>
-      <button class="btn-fuan" id="btn-fuan">不安… △</button>
+      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
     </div>
     <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
   `;
@@ -2551,13 +2542,13 @@ function restartCard(){
       </div>
     </div>
     <div class="card-nav">
-      <button class="chip" id="card-prev">◀ 前へ</button>
+      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
       <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next">次へ ▶</button>
+      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
     </div>
     <div class="card-acts">
-      <button class="btn-oboeta" id="btn-oboeta">覚えた！ ✓</button>
-      <button class="btn-fuan" id="btn-fuan">不安… △</button>
+      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
     </div>
     <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
   `;
