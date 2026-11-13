@@ -1171,7 +1171,7 @@ input,textarea{font-family:var(--fu)}
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area">
-  <div class="flash-card" id="flash-card" onclick="flipCard(event)">
+  <div class="flash-card" id="flash-card">
     <div class="flash-inner" id="flash-inner">
       <div class="flash-front">
         <div class="flash-side" id="card-front-side">表</div>
@@ -1185,13 +1185,13 @@ input,textarea{font-family:var(--fu)}
     </div>
   </div>
   <div class="card-nav">
-    <button class="chip" id="card-prev" onclick="event.stopPropagation();prevCard()">◀ 前へ</button>
+    <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
     <span class="card-counter" id="card-counter">1 / 1</span>
-    <button class="chip" id="card-next" onclick="event.stopPropagation();nextCard()">次へ ▶</button>
+    <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
   </div>
   <div class="card-acts">
-    <button class="btn-oboeta" onclick="event.stopPropagation();cardOboeta()">覚えた！ ✓</button>
-    <button class="btn-fuan" onclick="event.stopPropagation();cardFuan()">不安… △</button>
+    <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+    <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
   </div>
   <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
 </div>
@@ -1263,7 +1263,7 @@ input,textarea{font-family:var(--fu)}
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area">
-  <div class="flash-card" id="weak-flash-card" onclick="flipWeakCard(event)">
+  <div class="flash-card" id="weak-flash-card">
     <div class="flash-inner" id="weak-flash-inner">
       <div class="flash-front">
         <div class="flash-side">英語</div>
@@ -1277,13 +1277,13 @@ input,textarea{font-family:var(--fu)}
     </div>
   </div>
   <div class="card-nav">
-    <button class="chip" onclick="event.stopPropagation();prevWeakCard()">◀ 前へ</button>
+    <button class="chip" onclick="prevWeakCard()">◀ 前へ</button>
     <span class="card-counter" id="weak-card-counter">1 / 1</span>
-    <button class="chip" onclick="event.stopPropagation();nextWeakCard()">次へ ▶</button>
+    <button class="chip" onclick="nextWeakCard()">次へ ▶</button>
   </div>
   <div class="card-acts">
-    <button class="btn-oboeta" onclick="event.stopPropagation();weakCardOboeta()">覚えた！ →リストから削除</button>
-    <button class="btn-fuan" onclick="event.stopPropagation();weakCardFuan()">まだ不安…</button>
+    <button class="btn-oboeta" onclick="weakCardOboeta()">覚えた！ →リストから削除</button>
+    <button class="btn-fuan" onclick="weakCardFuan()">まだ不安…</button>
   </div>
 </div>
 </div>
@@ -1398,20 +1398,42 @@ $("mc-vocab").onclick=()=>go("s-vocab-top");
 $("mc-saved").onclick=()=>{go("s-saved");setTimeout(renderSaved,50)};
 
 // 読解モード選択
-$("btn-read-test").onclick=()=>{A.rMode="test";$("read-set-title").textContent="読解 設定（テストモード）";$("read-set-back").onclick=()=>go("s-read-modesel");go("s-read-set")};
-$("btn-read-kunshu").onclick=()=>{A.rMode="kunshu";$("read-set-title").textContent="読解 設定（特訓モード）";$("read-set-back").onclick=()=>go("s-read-modesel");go("s-read-set")};
+$("btn-read-test").onclick=()=>{A.rMode="test";$("read-set-title").textContent="読解 設定（テストモード）";$("read-set-back").onclick=()=>go("s-read-modesel");resetReadSet();go("s-read-set")};
+$("btn-read-kunshu").onclick=()=>{A.rMode="kunshu";$("read-set-title").textContent="読解 設定（特訓モード）";$("read-set-back").onclick=()=>go("s-read-modesel");resetReadSet();go("s-read-set")};
 
 // 英作文モード選択
-$("btn-write-test").onclick=()=>{A.wMode="test";$("write-set-title").textContent="英作文 設定（テストモード）";$("write-set-back").onclick=()=>go("s-write-modesel");go("s-write-set")};
-$("btn-write-kunshu").onclick=()=>{A.wMode="kunshu";$("write-set-title").textContent="英作文 設定（特訓モード）";$("write-set-back").onclick=()=>go("s-write-modesel");go("s-write-set")};
+$("btn-write-test").onclick=()=>{A.wMode="test";$("write-set-title").textContent="英作文 設定（テストモード）";$("write-set-back").onclick=()=>go("s-write-modesel");resetWriteSet();go("s-write-set")};
+$("btn-write-kunshu").onclick=()=>{A.wMode="kunshu";$("write-set-title").textContent="英作文 設定（特訓モード）";$("write-set-back").onclick=()=>go("s-write-modesel");resetWriteSet();go("s-write-set")};
 
 // 英単語TOP
-$("btn-vocab-test").onclick=()=>go("s-vtest-set");
+$("btn-vocab-test").onclick=()=>{
+  // 単語テスト設定リセット
+  A.v={book:"jhs",from:1,to:50,count:20,dir:"e2j"};
+  document.querySelectorAll("#s-vtest-set .chip[data-g]").forEach(c=>c.classList.remove("sel"));
+  const inputs=["v-from","v-to","v-count"];
+  inputs.forEach(id=>{const el=$(id);if(el)el.value=""});
+  $("btn-vtest-start").disabled=true;
+  go("s-vtest-set");
+};
 $("btn-vocab-anki").onclick=()=>go("s-anki-top");
 
 // 暗記モード
-$("btn-anki-card").onclick=()=>go("s-card-set");
-$("btn-anki-sent").onclick=()=>go("s-sent-set");
+$("btn-anki-card").onclick=()=>{
+  A.c={book:"jhs",from:1,to:50,dir:"e2j"};
+  document.querySelectorAll("#s-card-set .chip[data-g]").forEach(c=>c.classList.remove("sel"));
+  const inputs=["c-from","c-to"];
+  inputs.forEach(id=>{const el=$(id);if(el)el.value=""});
+  $("btn-card-start").disabled=true;
+  go("s-card-set");
+};
+$("btn-anki-sent").onclick=()=>{
+  A.s={book:"jhs",from:1,to:30};
+  document.querySelectorAll("#s-sent-set .chip[data-g]").forEach(c=>c.classList.remove("sel"));
+  const inputs=["s-from","s-to"];
+  inputs.forEach(id=>{const el=$(id);if(el)el.value=""});
+  $("btn-sent-start").disabled=true;
+  go("s-sent-set");
+};
 $("btn-anki-weak").onclick=()=>{renderWeakList();go("s-weak")};
 $("btn-weak-card").onclick=()=>{startWeakCard()};
 
@@ -1455,8 +1477,37 @@ function updateJrOptions(){
   chkR();
 }
 
-function chkR(){const ok=["school","grade","qtype","purpose","genre","difficulty"].every(k=>A.r[k]);$("btn-rgen").disabled=!ok}
-function chkW(){const wc=parseInt($("wc-inp").value||"0");A.w.wordCount=wc;const ok=A.w.school&&A.w.grade&&A.w.wtype&&A.w.lang&&wc>0&&A.w.wordRule;$("btn-wgen").disabled=!ok}
+function chkR(){
+  const ok=["school","grade","qtype","purpose","genre","difficulty"].every(k=>A.r[k]);
+  $("btn-rgen").disabled=!ok;
+  // ボタンの見た目も更新
+  const btn=$("btn-rgen");
+  if(btn)btn.style.opacity=ok?"1":"0.35";
+}
+function resetReadSet(){
+  // 読解設定画面のstateとUI選択をリセット
+  A.r={school:"",grade:"",qtype:"",purpose:"",genre:"",difficulty:"",jaT:false,enT:false,orderT:false};
+  document.querySelectorAll("#s-read-set .chip[data-g]").forEach(c=>c.classList.remove("sel"));
+  $("tog-ja").textContent="和訳　OFF";$("tog-ja").classList.remove("on");
+  $("tog-en").textContent="英訳　OFF";$("tog-en").classList.remove("on");
+  $("tog-order").textContent="並べ替え　OFF";$("tog-order").classList.remove("on");
+  $("diff-desc").textContent="";$("diff-desc").classList.remove("show");
+  $("qtype-desc").textContent="";$("qtype-desc").classList.remove("show");
+  $("btn-rgen").disabled=true;$("btn-rgen").style.opacity="0.35";
+}
+function chkW(){
+  const wc=parseInt($("wc-inp").value||"0");
+  A.w.wordCount=wc;
+  const ok=A.w.school&&A.w.grade&&A.w.wtype&&A.w.lang&&wc>0&&A.w.wordRule;
+  $("btn-wgen").disabled=!ok;
+  const btn=$("btn-wgen");if(btn)btn.style.opacity=ok?"1":"0.35";
+}
+function resetWriteSet(){
+  A.w={school:"",grade:"",wtype:"",lang:"",wordCount:0,wordRule:""};
+  document.querySelectorAll("#s-write-set .chip[data-g]").forEach(c=>c.classList.remove("sel"));
+  const inp=$("wc-inp");if(inp)inp.value="";
+  $("btn-wgen").disabled=true;$("btn-wgen").style.opacity="0.35";
+}
 
 // ================================================================
 // VOCAB SETTINGS
@@ -1482,14 +1533,19 @@ function chkVTest(){
   const f=parseInt($("v-from").value||"0"),t=parseInt($("v-to").value||"0"),c=parseInt($("v-count").value||"0");
   const ok=A.v.book&&f>0&&t>=f&&c>0&&A.v.dir;
   $("btn-vtest-start").disabled=!ok;
+  const btn=$("btn-vtest-start");if(btn)btn.style.opacity=ok?"1":"0.35";
 }
 function chkCard(){
   const f=parseInt($("c-from").value||"0"),t=parseInt($("c-to").value||"0");
-  $("btn-card-start").disabled=!(A.c.book&&f>0&&t>=f&&A.c.dir);
+  const ok=A.c.book&&f>0&&t>=f&&A.c.dir;
+  $("btn-card-start").disabled=!ok;
+  const btn=$("btn-card-start");if(btn)btn.style.opacity=ok?"1":"0.35";
 }
 function chkSent(){
   const f=parseInt($("s-from").value||"0"),t=parseInt($("s-to").value||"0");
-  $("btn-sent-start").disabled=!(A.s.book&&f>0&&t>=f);
+  const ok=A.s.book&&f>0&&t>=f;
+  $("btn-sent-start").disabled=!ok;
+  const btn=$("btn-sent-start");if(btn)btn.style.opacity=ok?"1":"0.35";
 }
 
 // ================================================================
@@ -2363,10 +2419,27 @@ function renderCard(){
   $("card-status").textContent=A.cardFuan.has(A.cardIdx)?"🔖 不安リストに追加済み":"";
   $("card-prev").disabled=A.cardIdx===0;$("card-next").disabled=A.cardIdx>=A.cardWords.length-1;
 }
-function flipCard(e){
-  if(e)e.stopPropagation();
-  const fi=$("flash-inner");if(fi)fi.classList.toggle("flipped");
+function flipCard(){
+  const fi=document.getElementById("flash-inner");if(fi)fi.classList.toggle("flipped");
 }
+// flash-card クリックでflip（ボタン以外）
+document.addEventListener("DOMContentLoaded",()=>{
+  const fc=document.getElementById("flash-card");
+  if(fc){
+    fc.addEventListener("click",(e)=>{
+      // ボタンのクリックは無視
+      if(e.target.closest("button"))return;
+      flipCard();
+    });
+  }
+  const wfc=document.getElementById("weak-flash-card");
+  if(wfc){
+    wfc.addEventListener("click",(e)=>{
+      if(e.target.closest("button"))return;
+      flipWeakCard();
+    });
+  }
+});
 function prevCard(){
   if(A.cardIdx>0){A.cardIdx--;renderCard()}
 }
@@ -2409,7 +2482,7 @@ function restartFuanCard(){
   A.cardIdx=0;A.cardFuan=new Set();
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="flipCard(event)">
+    <div class="flash-card" id="flash-card">
       <div class="flash-inner" id="flash-inner">
         <div class="flash-front">
           <div class="flash-side" id="card-front-side">表</div>
@@ -2423,17 +2496,27 @@ function restartFuanCard(){
       </div>
     </div>
     <div class="card-nav">
-      <button class="chip" id="card-prev" onclick="event.stopPropagation();prevCard()">◀ 前へ</button>
+      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
       <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next" onclick="event.stopPropagation();nextCard()">次へ ▶</button>
+      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
     </div>
     <div class="card-acts">
-      <button class="btn-oboeta" onclick="event.stopPropagation();cardOboeta()">覚えた！ ✓</button>
-      <button class="btn-fuan" onclick="event.stopPropagation();cardFuan()">不安… △</button>
+      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
     </div>
     <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
   `;
   renderCard();
+  setTimeout(()=>{
+    const fc=document.getElementById("flash-card");
+    if(fc){
+      fc.onclick=null;
+      fc.addEventListener("click",(e)=>{
+        if(e.target.tagName==="BUTTON"||e.target.closest("button"))return;
+        flipCard();
+      });
+    }
+  },100);
   showToast("⚠️ 不安な単語 "+fuanWords.length+"語 でやり直し！");
 }
 function restartCard(){
@@ -2442,7 +2525,7 @@ function restartCard(){
   // card-areaを再構築
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="flipCard(event)">
+    <div class="flash-card" id="flash-card">
       <div class="flash-inner" id="flash-inner">
         <div class="flash-front">
           <div class="flash-side" id="card-front-side">表</div>
@@ -2456,17 +2539,28 @@ function restartCard(){
       </div>
     </div>
     <div class="card-nav">
-      <button class="chip" id="card-prev" onclick="event.stopPropagation();prevCard()">◀ 前へ</button>
+      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
       <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next" onclick="event.stopPropagation();nextCard()">次へ ▶</button>
+      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
     </div>
     <div class="card-acts">
-      <button class="btn-oboeta" onclick="event.stopPropagation();cardOboeta()">覚えた！ ✓</button>
-      <button class="btn-fuan" onclick="event.stopPropagation();cardFuan()">不安… △</button>
+      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
     </div>
     <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
   `;
   renderCard();
+  // flash-cardのクリックイベントを再バインド
+  setTimeout(()=>{
+    const fc=document.getElementById("flash-card");
+    if(fc){
+      fc.onclick=null;
+      fc.addEventListener("click",(e)=>{
+        if(e.target.tagName==="BUTTON"||e.target.closest("button"))return;
+        flipCard();
+      },{once:false});
+    }
+  },100);
 }
 function cardOboeta(){
   const raw=A.cardWords[A.cardIdx];
