@@ -559,6 +559,10 @@ input,textarea{font-family:var(--fu)}
       <span class="mode-icon">📚</span><span class="mode-title">英単語</span>
       <span class="mode-desc">JHS1400・ターゲット1900</span>
     </button>
+    <button class="mode-card" id="mc-basic">
+      <span class="mode-icon">📝</span><span class="mode-title">基本例文</span>
+      <span class="mode-desc">中学・高校の基本例文演習</span>
+    </button>
     <button class="mode-card" id="mc-saved">
       <span class="mode-icon">📂</span><span class="mode-title">保存した問題</span>
       <span class="mode-desc">過去に保存した問題を解く</span>
@@ -1097,6 +1101,221 @@ input,textarea{font-family:var(--fu)}
   </div>
 </div></div>
 
+<!-- ================================================================
+     基本例文モード
+================================================================ -->
+
+<!-- S_BASIC_1: 基本例文 中学/高校選択 -->
+<div id="s-basic-level" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-top')">← トップ</button>
+  <div class="hd-logo"><span class="hd-logo-en">📝</span><span>基本例文</span></div>
+  <div style="width:70px"></div>
+</div></header>
+<div class="ctr-wrap">
+  <div class="ctr-ttl">📝 基本例文</div>
+  <div class="ctr-sub">中学・高校を選んでください</div>
+  <div class="ctr-col">
+    <button class="chip wide" onclick="selectBasicLevel('junior')" style="padding:1rem;font-size:1rem">
+      🏫 中学英文法<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">全27単元・基本例文 1〜91</span>
+    </button>
+    <button class="chip wide" onclick="selectBasicLevel('high')" style="padding:1rem;font-size:1rem">
+      🎓 高校英文法<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">全13単元・基本例文 1〜145</span>
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- S_BASIC_2: 基本例文 テスト/特訓モード選択 -->
+<div id="s-basic-modesel" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-basic-level')">← 戻る</button>
+  <div class="hd-logo"><span class="hd-logo-en">📝</span><span id="basic-modesel-title">基本例文 モード選択</span></div>
+  <div style="width:70px"></div>
+</div></header>
+<div class="ctr-wrap">
+  <div class="ctr-ttl" id="basic-modesel-head">📝 基本例文</div>
+  <div class="ctr-sub">モードを選んでください</div>
+  <div class="ctr-col">
+    <button class="chip wide" onclick="openBasicTestSetup()" style="padding:1rem;font-size:1rem">
+      ✍️ テストモード<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">範囲指定 → 並べ替え・空所補充・英和・和英（各5問）</span>
+    </button>
+    <button class="chip wide yel" onclick="openBasicDrill()" style="padding:1rem;font-size:1rem">
+      💡 特訓モード<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">単元別の基本例文一覧 ＆ 例文暗記カード</span>
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- S_BASIC_3: 基本例文 テスト範囲設定 -->
+<div id="s-basic-test-setup" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-basic-modesel')">← 戻る</button>
+  <div class="hd-logo"><span>基本例文 テスト設定</span></div>
+  <div style="width:70px"></div>
+</div></header>
+<div class="vocab-set-wrap">
+  <div class="step-card">
+    <div class="step-hd">例文番号の範囲指定</div>
+    <div class="range-row">
+      <label>No.</label>
+      <input type="number" class="range-inp" id="basic-range-start" min="1" value="1"/>
+      <span class="range-sep">〜</span>
+      <input type="number" class="range-inp" id="basic-range-end" min="1" value="10"/>
+    </div>
+    <div style="font-size:.82rem;color:var(--ink3);margin-top:.5rem;line-height:1.6" id="basic-test-range-info">
+      ・指定範囲の例文を最低1回は使って出題します。<br>
+      ・①並べ替え → ②空所補充 → ③英和 → ④和英 の順に各5問（計20問）出題されます。<br>
+      ・すべての設問で<strong>完答のみ正解</strong>となります。
+    </div>
+  </div>
+  <button class="btn-gen" onclick="startBasicTest()">テストを開始 ▶</button>
+</div>
+</div>
+
+<!-- S_BASIC_4: 基本例文 テスト解答画面 -->
+<div id="s-basic-test-quiz" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="if(confirm('テストを中断して戻りますか？'))go('s-basic-test-setup')">← 中断</button>
+  <div class="hd-logo"><span id="basic-quiz-sec-title">第1部：並べ替え問題</span></div>
+  <span style="font-weight:700;font-size:.85rem" id="basic-quiz-progress">1 / 20</span>
+</div></header>
+<div class="expl-wrap">
+  <div id="basic-quiz-container"></div>
+  <div style="display:flex;justify-content:space-between;gap:.8rem;margin-top:1.1rem">
+    <button class="chip" id="basic-quiz-prev" onclick="moveBasicQuiz(-1)">◀ 前の問題</button>
+    <button class="btn-pri" id="basic-quiz-next" onclick="moveBasicQuiz(1)">次の問題 ▶</button>
+  </div>
+</div>
+</div>
+
+<!-- S_BASIC_5: 基本例文 テスト結果画面 -->
+<div id="s-basic-test-result" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-top')">← ホーム</button>
+  <div class="hd-logo"><span>基本例文 テスト結果</span></div>
+  <button class="hd-home" onclick="go('s-top')">🏠</button>
+</div></header>
+<div class="expl-wrap">
+  <div class="step-card" style="text-align:center;margin-bottom:1rem">
+    <div style="font-size:.88rem;color:var(--ink3)">総合スコア（完答のみ正解）</div>
+    <div id="basic-res-score" style="font-size:1.9rem;font-weight:800;margin:.3rem 0">0 / 20問（0%）</div>
+    <div id="basic-res-breakdown" style="font-size:.84rem;color:var(--ink3)"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1rem">
+      <button class="chip" onclick="retryBasicTest()" style="justify-content:center;padding:.75rem;font-weight:700">🔄 解きなおし</button>
+      <button class="btn-pri" onclick="openBasicExplanation()" style="padding:.75rem">💡 解答解説</button>
+      <button class="chip grn" id="basic-save-btn" onclick="saveBasicTestSet()" style="justify-content:center;padding:.75rem;font-weight:700">📂 問題を保存する</button>
+      <button class="chip" onclick="go('s-top')" style="justify-content:center;padding:.75rem;font-weight:700">🏠 ホーム</button>
+    </div>
+  </div>
+  <div id="basic-res-list"></div>
+</div>
+</div>
+
+<!-- S_BASIC_6: 基本例文 解答解説画面（AI質問バー・翻訳バー付き） -->
+<div id="s-basic-test-exp" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-basic-test-result')">← 結果に戻る</button>
+  <span style="font-weight:700;font-size:.93rem">💡 基本例文 解答解説</span>
+  <button class="hd-home" onclick="go('s-top')">🏠</button>
+</div></header>
+<div class="hint-bar show" style="display:flex">
+  <span style="font-size:.8rem;color:var(--ink2);font-weight:600">🤖 右下のAIボタンで質問・下のバーで翻訳ができます</span>
+  <button class="hint-btn" onclick="toggleBasicTransBar()">🔤 翻訳バーを開く</button>
+</div>
+<div class="trans-bar" id="basic-trans-bar">
+  <div class="trans-row">
+    <input class="trans-inp" id="basic-trans-inp" placeholder="英文または日本語を入力または貼り付け…" />
+    <button class="trans-btn" onclick="doBasicTranslate()">翻訳</button>
+  </div>
+  <div class="trans-result" id="basic-trans-result"></div>
+</div>
+<div class="expl-wrap" style="padding-bottom:5.5rem">
+  <div id="basic-exp-list"></div>
+  <div style="display:flex;justify-content:flex-end;padding-top:.5rem">
+    <button class="btn-pri" onclick="go('s-top')">🏠 ホームへ戻る</button>
+  </div>
+</div>
+</div>
+
+<!-- S_BASIC_7: 基本例文 特訓モード（単元別一覧） -->
+<div id="s-basic-drill" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-basic-modesel')">← 戻る</button>
+  <div class="hd-logo"><span id="basic-drill-title">基本例文一覧</span></div>
+  <button class="chip yel" onclick="openBasicCardSetup()" style="font-weight:700">🃏 例文暗記カード</button>
+</div></header>
+<div class="expl-wrap">
+  <div class="step-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem">
+    <div>
+      <div style="font-weight:700;font-size:.95rem" id="basic-drill-sub">文法項目別・基本例文一覧</div>
+      <div style="font-size:.8rem;color:var(--ink3)" id="basic-drill-count"></div>
+    </div>
+    <button class="btn-pri" onclick="openBasicCardSetup()">🃏 例文暗記カードを開く</button>
+  </div>
+  <div id="basic-drill-list"></div>
+</div>
+</div>
+
+<!-- S_BASIC_8: 例文暗記カード 設定 -->
+<div id="s-basic-card-set" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-basic-drill')">← 一覧へ</button>
+  <div class="hd-logo"><span>例文暗記カード 設定</span></div>
+  <div style="width:70px"></div>
+</div></header>
+<div class="vocab-set-wrap">
+  <div class="step-card"><div class="step-hd">STEP 1　例文番号の範囲</div>
+    <div class="range-row">
+      <label>No.</label>
+      <input type="number" class="range-inp" id="basic-c-from" min="1" value="1"/>
+      <span class="range-sep">〜</span>
+      <input type="number" class="range-inp" id="basic-c-to" min="1" value="20"/>
+    </div>
+    <div style="font-size:.8rem;color:var(--ink3);margin-top:.35rem" id="basic-c-range-info"></div>
+  </div>
+  <div class="step-card"><div class="step-hd">STEP 2　表示方向</div><div class="chip-row">
+    <button class="chip sel" id="basic-cdir-ej" onclick="setBasicCardDir('ej')">表：英語（英和） → 裏：日本語</button>
+    <button class="chip" id="basic-cdir-je" onclick="setBasicCardDir('je')">表：日本語（和英） → 裏：英語</button>
+  </div></div>
+  <button class="btn-gen" onclick="startBasicCards()">カードを開始 ▶</button>
+</div>
+</div>
+
+<!-- S_BASIC_9: 例文暗記カード -->
+<div id="s-basic-card" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-basic-card-set')">← 設定</button>
+  <span style="font-weight:700;font-size:.85rem">🃏 例文暗記カード <span id="basic-card-progress"></span></span>
+  <button class="hd-home" onclick="go('s-top')">🏠</button>
+</div></header>
+<div class="card-area">
+  <div class="flash-card" id="basic-flash-card" style="max-width:560px;min-height:240px">
+    <div class="flash-inner" id="basic-flash-inner">
+      <div class="flash-front" style="padding:1.4rem">
+        <div class="flash-side" id="basic-card-front-side">表</div>
+        <div class="flash-word" id="basic-card-front-word" style="font-size:1.15rem;line-height:1.6"></div>
+        <div class="flash-hint">タップして裏返す</div>
+      </div>
+      <div class="flash-back" style="padding:1.4rem">
+        <div class="flash-side" id="basic-card-back-side">裏</div>
+        <div class="flash-mean" id="basic-card-back-mean" style="font-size:1.05rem;line-height:1.6"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card-nav">
+    <button class="chip" id="basic-card-prev" onclick="prevBasicCard()">◀ 前へ</button>
+    <span class="card-counter" id="basic-card-counter">1 / 1</span>
+    <button class="chip" id="basic-card-next" onclick="nextBasicCard()">次へ ▶</button>
+  </div>
+  <div class="card-acts">
+    <button class="btn-oboeta" onclick="basicCardOboeta()">覚えた！ ✓</button>
+    <button class="btn-fuan" onclick="basicCardFuan()">不安… △</button>
+  </div>
+  <div style="font-size:.82rem;color:var(--ink3)" id="basic-card-status"></div>
+</div>
+</div>
+
 <!-- S21: 保存した問題 -->
 <div id="s-saved" class="scr">
 <header class="hd"><div class="hd-in">
@@ -1111,6 +1330,7 @@ input,textarea{font-family:var(--fu)}
       <button class="chip sel" data-sf="type" data-sv="all">すべて</button>
       <button class="chip" data-sf="type" data-sv="reading">読解</button>
       <button class="chip" data-sf="type" data-sv="writing">英作文</button>
+      <button class="chip" data-sf="type" data-sv="basic">基本例文</button>
     </div>
     <div class="sf-row">
       <span class="sf-lbl">学校</span>
@@ -2607,6 +2827,18 @@ function renderSaved(){
       const exBtn=mk("button","chip");exBtn.textContent="💡 解説";
       exBtn.onclick=e2=>{e2.stopPropagation();A.qdata=item.qdata;A.uans=item.uans||{};A.wrong=item.wrong||[];renderExpl(false);go("s-expl")};
       acts.append(playBtn,exBtn);
+    }else if(item.type==="basic"&&item.questions){
+      const playBtn=document.createElement("button");playBtn.className="chip grn";playBtn.textContent="▶ 解く";
+      playBtn.onclick=e=>{
+        e.stopPropagation();
+        loadSavedBasicTest(item,false);
+      };
+      const exBtn=document.createElement("button");exBtn.className="chip";exBtn.textContent="💡 解説";
+      exBtn.onclick=e=>{
+        e.stopPropagation();
+        loadSavedBasicTest(item,true);
+      };
+      acts.append(playBtn,exBtn);
     }
     const delBtn=mk("button","chip red");delBtn.textContent="🗑 削除";
     delBtn.onclick=e2=>{e2.stopPropagation();if(!confirm("削除しますか？"))return;const all=getSaved();all.splice(all.findIndex(x=>x.id===item.id),1);setSaved(all);renderSaved()};
@@ -3214,7 +3446,8 @@ function renderSaved(){
     const meta=document.createElement("div");meta.className="si-meta";meta.textContent="保存日時："+item.savedAt;
     left.append(ttl,meta);hd.appendChild(left);
     const tags=document.createElement("div");tags.className="si-tags";
-    const t1=document.createElement("span");t1.className="tag";t1.textContent=item.type==="reading"?"📖 読解":"✏️ 英作文";
+    const t1=document.createElement("span");t1.className="tag";
+    t1.textContent=item.type==="reading"?"📖 読解":item.type==="basic"?"📝 基本例文":"✏️ 英作文";
     tags.appendChild(t1);
     if(item.score){
       const t2=document.createElement("span");t2.className="tag";
@@ -3232,6 +3465,10 @@ function renderSaved(){
     }else if(item.type==="writing"&&item.wdata){
       const prev=document.createElement("div");prev.className="si-preview";
       prev.textContent=item.wdata.prompt||"";body.appendChild(prev);
+    }else if(item.type==="basic"&&item.questions){
+      const prev=document.createElement("div");prev.className="si-preview";
+      prev.textContent=(item.settings?.school==="high"?"高校英文法":"中学英文法")+" ｜ 出題範囲 No."+(item.range?.[0]||1)+"〜"+(item.range?.[1]||10)+"（全20問）";
+      body.appendChild(prev);
     }
     const acts=document.createElement("div");acts.className="si-acts";
     if(item.type==="reading"&&item.qdata){
@@ -3304,7 +3541,8 @@ document.addEventListener("click",e2=>{
 // ================================================================
 const AI_BAR_SCREENS = new Set([
   "s-rscore","s-ascore","s-expl","s-expl-sel",
-  "s-wscore","s-redo-sel","s-redo-wrong-start"
+  "s-wscore","s-redo-sel","s-redo-wrong-start",
+  "s-basic-test-exp"
 ]);
 let aiChatHistory = [];
 let _goOrig = null;
@@ -3327,6 +3565,15 @@ function buildAiContext(){
     ctx += "[Writing Question]\n"+(A.wdata.prompt||"")+"\n\n";
     ctx += "[Sample Answer]\n"+(A.wdata.sampleAnswer||"")+"\n\n";
     ctx += "[Student's Answer]\n"+(A.wans||"")+"\n\n";
+  }
+  if(typeof basicState !== "undefined" && basicState.testQuestions && basicState.testQuestions.length){
+    ctx += "[Basic Sentence Test Questions]\n";
+    basicState.testQuestions.forEach((q,i)=>{
+      ctx += `Q${i+1} (${q.item.unit} No.${q.item.n}): ${q.prompt}\n`;
+      ctx += `Model Answer: ${q.answer}\n`;
+      ctx += `Full Sentence: ${q.item.en} / ${q.item.ja}\n`;
+    });
+    ctx += "\n";
   }
   return ctx;
 }
@@ -3412,6 +3659,556 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
     inp.addEventListener("keydown",e=>{
       if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAiQuestion();}
+    });
+  }
+});
+
+
+// ================================================================
+// 基本例文データ ＆ ロジック
+// ================================================================
+const BASIC_EXAMPLES = {"junior": [{"unit": "1. be動詞（現在形）", "items": [{"n": 1, "en": "I am a student, and I am good at playing tennis.", "ja": "私は生徒で、テニスをするのが得意です。"}, {"n": 2, "en": "He is interested in Japanese history.", "ja": "彼は日本の歴史に興味があります。"}, {"n": 3, "en": "She is famous for her beautiful voice.", "ja": "彼女は美しい声で有名です。"}]}, {"unit": "2. 一般動詞（現在形）・複数形", "items": [{"n": 4, "en": "I play tennis every day, and I have two brothers.", "ja": "私は毎日テニスをし、2人の兄弟がいます。"}, {"n": 5, "en": "Why don't you join us after school?", "ja": "放課後、私たちと一緒にやりませんか。"}]}, {"unit": "3. 代名詞（人称代名詞・指示代名詞・所有代名詞）", "items": [{"n": 6, "en": "This is my pen, and that is yours.", "ja": "これは私のペンで、あれはあなたのものです。"}, {"n": 7, "en": "I know him very well, so don't worry about him.", "ja": "私は彼のことをよく知っているので、彼のことは心配しないでください。"}]}, {"unit": "4. 疑問詞（what, who, where, when, why, how）", "items": [{"n": 8, "en": "What time is it now?", "ja": "今何時ですか。"}, {"n": 9, "en": "What color do you like the best?", "ja": "何色が一番好きですか。"}, {"n": 10, "en": "How many books do you have?", "ja": "あなたは本を何冊持っていますか。"}, {"n": 11, "en": "How long does it take to get to the station?", "ja": "駅に着くまでどのくらいの時間がかかりますか。"}, {"n": 12, "en": "How often do you clean your room?", "ja": "どのくらいの頻度で自分の部屋を掃除しますか。"}, {"n": 13, "en": "Whose bag is this?", "ja": "これは誰のかばんですか。"}]}, {"unit": "5. 三人称単数現在（三単現のs）", "items": [{"n": 14, "en": "He speaks English well.", "ja": "彼は上手に英語を話します。"}, {"n": 15, "en": "Does she like music? — No, she doesn't.", "ja": "彼女は音楽が好きですか。― いいえ、好きではありません。"}]}, {"unit": "6. 命令文・感嘆文", "items": [{"n": 16, "en": "Open the window, please.", "ja": "窓を開けてください。"}, {"n": 17, "en": "Don't be late for school, and be sure to lock the door.", "ja": "学校に遅刻しないで、そして必ずドアに鍵をかけなさい。"}, {"n": 18, "en": "Please take care of my dog while I'm away.", "ja": "私が留守の間、私の犬の世話をしてください。"}, {"n": 19, "en": "Let's play soccer together.", "ja": "一緒にサッカーをしましょう。"}, {"n": 20, "en": "How tall he is! / What a nice day it is!", "ja": "彼はなんて背が高いのでしょう！ ／ なんて素敵な日なのでしょう！"}]}, {"unit": "7. 現在進行形", "items": [{"n": 21, "en": "She is reading a book now.", "ja": "彼女は今、本を読んでいます。"}, {"n": 22, "en": "I'm looking for my keys in my room.", "ja": "私は部屋で鍵を探しています。"}]}, {"unit": "8. 助動詞 can", "items": [{"n": 23, "en": "I can swim fast.", "ja": "私は速く泳ぐことができます。"}, {"n": 24, "en": "Can you help me with my homework?", "ja": "私の宿題を手伝ってもらえますか。"}]}, {"unit": "9. 一般動詞の過去形（規則・不規則）", "items": [{"n": 25, "en": "I visited Kyoto last week.", "ja": "私は先週、京都を訪れました。"}, {"n": 26, "en": "He went to Tokyo yesterday.", "ja": "彼は昨日、東京へ行きました。"}, {"n": 27, "en": "Thank you for your help yesterday.", "ja": "昨日は手伝ってくれてありがとう。"}]}, {"unit": "10. be動詞の過去形・過去進行形", "items": [{"n": 28, "en": "He was busy last night.", "ja": "彼は昨夜忙しかったです。"}, {"n": 29, "en": "They were playing soccer then.", "ja": "彼らはその時、サッカーをしていました。"}]}, {"unit": "11. 未来表現（will / be going to）", "items": [{"n": 30, "en": "It will rain tomorrow.", "ja": "明日は雨が降るでしょう。"}, {"n": 31, "en": "I am going to study abroad next year.", "ja": "私は来年、留学するつもりです。"}]}, {"unit": "12. 接続詞（when, if, because, that, and, but, or）", "items": [{"n": 32, "en": "When I got home, he was sleeping.", "ja": "私が帰宅したとき、彼は眠っていました。"}, {"n": 33, "en": "If it rains tomorrow, I will stay home.", "ja": "もし明日雨が降ったら、私は家にいます。"}, {"n": 34, "en": "I think (that) he is kind.", "ja": "私は彼が親切だと思います。"}]}, {"unit": "13. 助動詞（must, have to, may, should, would, could）", "items": [{"n": 35, "en": "You must obey the rules, and you had better go home now.", "ja": "あなたは規則に従わなければなりません、そして今は帰宅したほうがよいです。"}, {"n": 36, "en": "You don't have to hurry.", "ja": "あなたは急ぐ必要はありません。"}, {"n": 37, "en": "May I use your pen?", "ja": "あなたのペンを使ってもよろしいですか。"}, {"n": 38, "en": "You should see a doctor.", "ja": "あなたは医者に診てもらうべきです。"}, {"n": 39, "en": "Would you like some coffee?", "ja": "コーヒーはいかがですか。"}, {"n": 40, "en": "Shall we dance?", "ja": "一緒に踊りましょうか。"}, {"n": 41, "en": "Could you open the door?", "ja": "ドアを開けていただけますか。"}]}, {"unit": "14. 不定詞（名詞的・形容詞的・副詞的用法）", "items": [{"n": 42, "en": "I want to be a doctor, and I would like to visit Kyoto.", "ja": "私は医者になりたいですし、京都を訪れたいです。"}, {"n": 43, "en": "He decided to study abroad.", "ja": "彼は留学することを決心しました。"}, {"n": 44, "en": "I have a lot of homework to do.", "ja": "私にはすべき宿題がたくさんあります。"}, {"n": 45, "en": "Give me something cold to drink.", "ja": "何か冷たい飲み物をください。"}, {"n": 46, "en": "I went to the library to study.", "ja": "私は勉強するために図書館へ行きました。"}, {"n": 47, "en": "I am glad to see you.", "ja": "私はあなたに会えて嬉しいです。"}]}, {"unit": "15. 動名詞（～ing）", "items": [{"n": 48, "en": "Playing tennis is fun, and I enjoyed talking with you.", "ja": "テニスをすることは楽しく、私はあなたと話して楽しみました。"}, {"n": 49, "en": "Please stop talking in class.", "ja": "授業中におしゃべりするのをやめてください。"}, {"n": 50, "en": "She finished doing her homework.", "ja": "彼女は宿題をし終えました。"}, {"n": 51, "en": "How about going to the movies?", "ja": "映画に行くのはどうですか。"}, {"n": 52, "en": "Thank you for inviting me.", "ja": "私を招待してくれてありがとう。"}]}, {"unit": "16. There is / are ～ の文", "items": [{"n": 53, "en": "There is a cat under the table.", "ja": "テーブルの下に1匹の猫がいます。"}, {"n": 54, "en": "There were many people in the park.", "ja": "公園にはたくさんの人がいました。"}]}, {"unit": "17. 文型（SVOO・SVOC）", "items": [{"n": 55, "en": "She gave me a present.", "ja": "彼女は私にプレゼントをくれました。"}, {"n": 56, "en": "We call him Ken.", "ja": "私たちは彼をケンと呼びます。"}, {"n": 57, "en": "The news made me happy.", "ja": "その知らせは私を幸せにしました。"}]}, {"unit": "18. 比較（比較級・最上級・原級）", "items": [{"n": 58, "en": "Ken is taller than Tom, and he is one of the best players on the team.", "ja": "ケンはトムより背が高く、チームで最も優れた選手の1人です。"}, {"n": 59, "en": "This book is more interesting than that one.", "ja": "この本はあの本より面白いです。"}, {"n": 60, "en": "Mt. Fuji is the highest mountain in Japan.", "ja": "富士山は日本で一番高い山です。"}, {"n": 61, "en": "Which do you like better, dogs or cats?", "ja": "犬と猫のどちらがより好きですか。"}, {"n": 62, "en": "I like summer the best of all seasons.", "ja": "私はすべての季節の中で夏が一番好きです。"}, {"n": 63, "en": "This river is as long as that one.", "ja": "この川はあの川と同じくらいの長さです。"}]}, {"unit": "19. 受動態（受け身）", "items": [{"n": 64, "en": "English is spoken all over the world.", "ja": "英語は世界中で話されています。"}, {"n": 65, "en": "This song is loved by many people.", "ja": "この歌は多くの人々に愛されています。"}, {"n": 66, "en": "The mountain is covered with snow.", "ja": "その山は雪で覆われています。"}, {"n": 67, "en": "I was surprised at the news.", "ja": "私はその知らせに驚きました。"}, {"n": 68, "en": "He is known to everyone in this town.", "ja": "彼はこの町のすべての人に知られています。"}, {"n": 69, "en": "This desk is made of wood, and butter is made from milk.", "ja": "この机は木でできており、バターは牛乳から作られます。"}]}, {"unit": "20. 現在完了形（継続・経験・完了）", "items": [{"n": 70, "en": "How long have you lived here? — I have lived here for ten years.", "ja": "どのくらいの間ここに住んでいますか。― 10年間ここに住んでいます。"}, {"n": 71, "en": "Have you ever been to Paris? — Yes, I have been to Okinawa twice, too.", "ja": "これまでにパリへ行ったことがありますか。― はい、沖縄にも2回行ったことがあります。"}, {"n": 72, "en": "He has gone to London.", "ja": "彼はロンドンへ行ってしまいました（今ここにはいません）。"}, {"n": 73, "en": "He has just finished his homework.", "ja": "彼はちょうど宿題を終えたところです。"}]}, {"unit": "21. 現在完了進行形", "items": [{"n": 74, "en": "It has been raining since this morning.", "ja": "今朝からずっと雨が降り続いています。"}]}, {"unit": "22. 間接疑問文・疑問詞 ＋ to不定詞", "items": [{"n": 75, "en": "I know where he lives.", "ja": "私は彼がどこに住んでいるか知っています。"}, {"n": 76, "en": "Tell me what you want.", "ja": "あなたが何を欲しいのか私に教えてください。"}, {"n": 77, "en": "I don't know what to do next.", "ja": "私は次に何をすべきかわかりません。"}]}, {"unit": "23. 形式主語（It is ～ for 人 to ...）", "items": [{"n": 78, "en": "It is important for us to study English.", "ja": "私たちが英語を勉強することは重要です。"}, {"n": 79, "en": "It is kind of you to help me.", "ja": "私を手伝ってくれるとはあなたは親切です。"}, {"n": 80, "en": "It takes me ten minutes to walk to school.", "ja": "私が歩いて学校へ行くのに10分かかります。"}]}, {"unit": "24. 分詞の形容詞的用法（現在分詞・過去分詞）", "items": [{"n": 81, "en": "Look at the running boy.", "ja": "走っている少年を見なさい。"}, {"n": 82, "en": "The girl standing by the window is Mary.", "ja": "窓のそばに立っている少女はメアリーです。"}, {"n": 83, "en": "The language spoken in Brazil is Portuguese.", "ja": "ブラジルで話されている言語はポルトガル語です。"}]}, {"unit": "25. 関係代名詞（主格・目的格・省略）", "items": [{"n": 84, "en": "He is a boy who plays the piano.", "ja": "彼はピアノを弾く少年です。"}, {"n": 85, "en": "This is a book which is read by many people.", "ja": "これは多くの人々に読まれている本です。"}, {"n": 86, "en": "The book (which) I bought yesterday was interesting.", "ja": "私が昨日買った本は面白かったです。"}]}, {"unit": "26. 原形不定詞（make, let, help）", "items": [{"n": 87, "en": "My mother made me clean my room.", "ja": "母は私に自分の部屋を掃除させました。"}, {"n": 88, "en": "Let me introduce myself.", "ja": "私に自己紹介をさせてください。"}, {"n": 89, "en": "He helped me (to) carry the box.", "ja": "彼は私がその箱を運ぶのを手伝ってくれました。"}]}, {"unit": "27. 仮定法過去（I wish / If I were ～）", "items": [{"n": 90, "en": "I wish I could fly.", "ja": "空を飛べたらいいのになあ。"}, {"n": 91, "en": "If I were a bird, I could fly to you.", "ja": "もし私が鳥だったら、あなたのところへ飛んでいけるのに。"}]}], "high": [{"unit": "1. 文型（5文型の発展）", "items": [{"n": 1, "en": "This medicine works well.", "ja": "この薬はよく効きます。", "sub": "第1文型 (SV)"}, {"n": 2, "en": "This flower smells sweet. / He remained silent.", "ja": "この花は甘い香りがします。 ／ 彼は黙ったままでした。", "sub": "第2文型 (SVC)"}, {"n": 3, "en": "We discussed the problem for hours. / She married a doctor last year. / We reached the station at noon.", "ja": "私たちは何時間もその問題について議論しました。 ／ 彼女は昨年、医者と結婚しました。 ／ 私たちは正午に駅に到着しました。", "sub": "第3文型 (SVO)"}, {"n": 4, "en": "Can I ask you a favor? / It saved me a lot of trouble.", "ja": "お願いをしてもよろしいですか。 ／ それのおかげで多くの手間が省けました。", "sub": "第4文型 (SVOO)"}, {"n": 5, "en": "Keep the room clean. / Please remind me of the meeting. / They provided us with food and water. / He deprived her of her freedom. / I take it for granted that he will pass the exam.", "ja": "部屋をきれいな状態に保ちなさい。 ／ その会議のことを私に思い出させてください。 ／ 彼らは私たちに食料と水を供給してくれました。 ／ 彼は彼女から自由を奪いました。 ／ 私は彼が試験に合格することを当然のことと思っています。", "sub": "第5文型 (SVOC)"}]}, {"unit": "2. 時制（完了形の拡張・時制の一致）", "items": [{"n": 6, "en": "When I arrived at the station, the train had already left.", "ja": "私が駅に着いたとき、列車はすでに出発してしまっていました。", "sub": "過去完了形"}, {"n": 7, "en": "I will have finished this work by tomorrow. / It will not be long before spring comes.", "ja": "私は明日までにこの仕事を終えているでしょう。 ／ まもなく春が来るでしょう。", "sub": "未来完了形"}, {"n": 8, "en": "He had been waiting for two hours when she arrived.", "ja": "彼女が到着したとき、彼はずっと2時間待ち続けていました。", "sub": "過去完了進行形"}, {"n": 9, "en": "It is ten years since I met him last.", "ja": "私が最後に彼に会ってから10年になります。", "sub": "経過時間の表現"}, {"n": 10, "en": "He said that he was busy. / Our teacher told us that the earth goes around the sun.", "ja": "彼は忙しいと言いました。 ／ 先生は私たちに、地球は太陽の周りを回っていると教えました。", "sub": "時制の一致と例外"}]}, {"unit": "3. 助動詞（発展・助動詞 ＋ have ＋ 過去分詞）", "items": [{"n": 11, "en": "It used to be a quiet village. / He would often go fishing in his youth.", "ja": "ここは以前は静かな村でした。 ／ 彼は若い頃、よく釣りに行ったものでした。", "sub": "過去の習慣・状態"}, {"n": 12, "en": "You had better go to bed early. / You ought to help him.", "ja": "あなたは早く寝たほうがよいです。 ／ あなたは彼を手伝うべきです。", "sub": "忠告・義務"}, {"n": 13, "en": "He must have missed the train.", "ja": "彼は電車に乗り遅れたに違いありません。", "sub": "助動詞 ＋ have ＋ 過去分詞"}, {"n": 14, "en": "She cannot have said such a thing.", "ja": "彼女がそんなことを言ったはずがありません。", "sub": "助動詞 ＋ have ＋ 過去分詞"}, {"n": 15, "en": "You should have studied harder.", "ja": "あなたはもっと一生懸命勉強すべきだったのに。", "sub": "助動詞 ＋ have ＋ 過去分詞"}, {"n": 16, "en": "He may have forgotten the promise.", "ja": "彼はその約束を忘れたのかもしれません。", "sub": "助動詞 ＋ have ＋ 過去分詞"}, {"n": 17, "en": "You may well get angry.", "ja": "あなたが怒るのももっともです。", "sub": "重要慣用表現"}, {"n": 18, "en": "He may as well throw his money away.", "ja": "彼はお金を捨てているようなものです。", "sub": "重要慣用表現"}, {"n": 19, "en": "You might as well go home now.", "ja": "今はもう帰宅したほうがましです。", "sub": "重要慣用表現"}, {"n": 20, "en": "We cannot be too careful when driving.", "ja": "運転するときは、どんなに注意してもしすぎることはありません。", "sub": "重要慣用表現"}]}, {"unit": "4. 受動態（進行形・完了形・群動詞・by以外）", "items": [{"n": 21, "en": "The bridge is being built now. / The room has already been cleaned.", "ja": "その橋は今建設されているところです。 ／ その部屋はすでに掃除されています。", "sub": "進行形・完了形の受動態"}, {"n": 22, "en": "I was given this watch by my father. / He is called Ken by everyone.", "ja": "私は父からこの腕時計をもらいました。 ／ 彼はみんなからケンと呼ばれています。", "sub": "第4文型・第5文型の受動態"}, {"n": 23, "en": "She was laughed at by them. / The baby was taken care of by her.", "ja": "彼女は彼らに笑われました。 ／ その赤ちゃんは彼女に世話をされました。", "sub": "群動詞（句動詞）の受動態"}, {"n": 24, "en": "I was surprised at the news.", "ja": "私はその知らせに驚きました。", "sub": "by以外の前置詞を使う受動態"}, {"n": 25, "en": "The mountain is covered with snow.", "ja": "その山は雪で覆われています。", "sub": "by以外の前置詞を使う受動態"}, {"n": 26, "en": "He is known to everybody.", "ja": "彼はすべての人に知られています。", "sub": "by以外の前置詞を使う受動態"}, {"n": 27, "en": "This desk is made of wood. / Wine is made from grapes.", "ja": "この机は木でできています。 ／ ワインはブドウから作られます。", "sub": "by以外の前置詞を使う受動態"}]}, {"unit": "5. 不定詞（発展用法・慣用表現）", "items": [{"n": 28, "en": "He grew up to be a famous artist. / He must be smart to solve the problem.", "ja": "彼は成長して有名な芸術家になりました。 ／ その問題を解くとは、彼は賢いに違いありません。", "sub": "副詞的用法（結果・判断の根拠）"}, {"n": 29, "en": "I found it easy to read this book.", "ja": "私はこの本を読むのが簡単だとわかりました。", "sub": "形式目的語（SVOC）"}, {"n": 30, "en": "I saw him cross the street.", "ja": "私は彼が通りを渡るのを見ました。", "sub": "知覚動詞 ＋ O ＋ 原形不定詞"}, {"n": 31, "en": "He seems to have been rich.", "ja": "彼は（以前）金持ちだったようです。", "sub": "完了不定詞（to have ＋ 過去分詞）"}, {"n": 32, "en": "be to 不定詞: We are to meet at five.", "ja": "私たちは5時に会う予定になっています。", "sub": "完了不定詞（to have ＋ 過去分詞）"}, {"n": 33, "en": "To begin with, let's check the schedule.", "ja": "まず初めに、スケジュールを確認しましょう。", "sub": "重要慣用表現"}, {"n": 34, "en": "Needless to say, health is above wealth.", "ja": "言うまでもなく、健康は富にまさります。", "sub": "重要慣用表現"}, {"n": 35, "en": "Strange to say, nobody knew the fact.", "ja": "奇妙なことですが、誰もその事実を知りませんでした。", "sub": "重要慣用表現"}, {"n": 36, "en": "To make matters worse, it began to rain.", "ja": "さらに悪いことには、雨が降り始めました。", "sub": "重要慣用表現"}, {"n": 37, "en": "So to speak, he is a walking dictionary.", "ja": "いわば、彼は生き字引です。", "sub": "重要慣用表現"}, {"n": 38, "en": "To tell the truth, I don't like him.", "ja": "実を言うと、私は彼が好きではありません。", "sub": "重要慣用表現"}, {"n": 39, "en": "He is so kind as to carry my bag.", "ja": "彼は親切にも私のかばんを運んでくれます。", "sub": "重要慣用表現"}, {"n": 40, "en": "She worked hard so as not to fail the exam.", "ja": "彼女は試験に落ちないように一生懸命勉強しました。", "sub": "重要慣用表現"}, {"n": 41, "en": "He is old enough to go to school alone. / I was too tired to walk.", "ja": "彼は1人で学校へ行ける年齢です。 ／ 私は疲れすぎて歩けませんでした。", "sub": "重要慣用表現"}, {"n": 42, "en": "I am anxious to see the result.", "ja": "私はその結果を見ることを切望しています。", "sub": "重要慣用表現"}, {"n": 43, "en": "He is apt to forget his promises.", "ja": "彼は約束を忘れがちです。", "sub": "重要慣用表現"}]}, {"unit": "6. 動名詞（発展用法・慣用表現）", "items": [{"n": 44, "en": "Would you mind opening the window? / He decided to go abroad.", "ja": "窓を開けていただけますか。 ／ 彼は留学することを決心しました。", "sub": "動名詞のみ／不定詞のみを目的語にとる動詞"}, {"n": 45, "en": "I remember meeting her before. / Remember to post this letter.", "ja": "私は以前彼女に会ったことを覚えています。 ／ 忘れずにこの手紙を投函してください。", "sub": "両方とるが意味が変わる動詞"}, {"n": 46, "en": "I tried using this pen. / I tried to open the box.", "ja": "私は試しにこのペンを使ってみました。 ／ 私はその箱を開けようと試みました。", "sub": "両方とるが意味が変わる動詞"}, {"n": 47, "en": "He stopped smoking. / He stopped to smoke.", "ja": "彼はタバコをやめました。 ／ 彼はタバコを吸うために立ち止まりました。", "sub": "両方とるが意味が変わる動詞"}, {"n": 48, "en": "I am proud of my son's winning the prize. / He is ashamed of having told a lie.", "ja": "私は息子がその賞を受賞したことを誇りに思います。 ／ 彼は（過去に）嘘をついたことを恥じています。", "sub": "意味上の主語・完了形"}, {"n": 49, "en": "I cannot help laughing when I see him.", "ja": "彼を見ると笑わずにはいられません。", "sub": "重要慣用表現"}, {"n": 50, "en": "It goes without saying that time is money.", "ja": "時は金なりというのは言うまでもありません。", "sub": "重要慣用表現"}, {"n": 51, "en": "She is used to getting up early.", "ja": "彼女は早起きすることに慣れています。", "sub": "重要慣用表現"}, {"n": 52, "en": "He objected to being treated like a child.", "ja": "彼は子供扱いされることに反対しました。", "sub": "重要慣用表現"}, {"n": 53, "en": "What do you say to taking a walk?", "ja": "散歩をするのはどうですか。", "sub": "重要慣用表現"}, {"n": 54, "en": "He came near (to) drowning in the river.", "ja": "彼はもう少しで川で溺れるところでした。", "sub": "重要慣用表現"}, {"n": 55, "en": "There is no accounting for tastes. / There is no telling what will happen.", "ja": "蓼（たで）食う虫も好き好き（好みは説明できない）。 ／ 何が起こるかはわかりません。", "sub": "重要慣用表現"}, {"n": 56, "en": "Make a point of reading every day.", "ja": "毎日読書をすることを習慣にしています。", "sub": "重要慣用表現"}, {"n": 57, "en": "It is no use crying over spilt milk. / I feel like eating ramen.", "ja": "覆水盆に返らず（こぼれたミルクを嘆いても無駄だ）。 ／ ラーメンを食べたい気分です。", "sub": "重要慣用表現"}, {"n": 58, "en": "I am looking forward to seeing you. / This book is worth reading.", "ja": "あなたに会うのを楽しみにしています。 ／ この本は読む価値があります。", "sub": "重要慣用表現"}, {"n": 59, "en": "On arriving at the station, I called him.", "ja": "駅に到着するとすぐに、私は彼に電話をしました。", "sub": "重要慣用表現"}]}, {"unit": "7. 分詞（叙述用法・分詞構文）", "items": [{"n": 60, "en": "Keep the door locked.", "ja": "ドアに鍵をかけたままにしておきなさい。", "sub": "補語になる分詞（SVOC・使役・被害）"}, {"n": 61, "en": "I couldn't make myself understood in English.", "ja": "私は英語で自分の言いたいことを理解させることができませんでした。", "sub": "補語になる分詞（SVOC・使役・被害）"}, {"n": 62, "en": "I had my wallet stolen on the train.", "ja": "私は電車の中で財布を盗まれました。", "sub": "補語になる分詞（SVOC・使役・被害）"}, {"n": 63, "en": "I had my watch repaired.", "ja": "私は腕時計を修理してもらいました。", "sub": "補語になる分詞（SVOC・使役・被害）"}, {"n": 64, "en": "The game was exciting. / I was excited at the game.", "ja": "その試合はワクワクするものでした。 ／ 私はその試合に興奮しました。", "sub": "感情を表す分詞（-ing / -ed）"}, {"n": 65, "en": "Walking along the street, I met an old friend.", "ja": "通りを歩いていたとき、私は旧友に出会いました。", "sub": "分詞構文"}, {"n": 66, "en": "Not knowing what to do, I asked for help.", "ja": "何をすべきかわからなかったので、私は助けを求めました。", "sub": "分詞構文"}, {"n": 67, "en": "Written in simple English, this book is easy to read.", "ja": "やさしい英語で書かれているので、この本は読みやすいです。", "sub": "分詞構文"}, {"n": 68, "en": "He stood there with his arms folded.", "ja": "彼は腕を組んだままそこに立っていました。", "sub": "分詞構文"}, {"n": 69, "en": "Strictly speaking, that is not correct.", "ja": "厳密に言えば、それは正しくありません。", "sub": "慣用的な独立分詞構文・前置詞化"}, {"n": 70, "en": "Roughly speaking, there are 100 people here.", "ja": "大まかに言えば、ここには100人の人がいます。", "sub": "慣用的な独立分詞構文・前置詞化"}, {"n": 71, "en": "Generally speaking, Japanese people are polite. / Frankly speaking, I don't agree with you.", "ja": "一般的に言って、日本人は礼儀正しいです。 ／ 率直に言って、私はあなたに賛成しません。", "sub": "慣用的な独立分詞構文・前置詞化"}, {"n": 72, "en": "Judging from his accent, he must be an American.", "ja": "彼のなまりから判断すると、彼はアメリカ人に違いありません。", "sub": "慣用的な独立分詞構文・前置詞化"}, {"n": 73, "en": "Considering his age, he is very active.", "ja": "彼の年齢を考慮すると、彼はとても活動的です。", "sub": "慣用的な独立分詞構文・前置詞化"}, {"n": 74, "en": "Supposing (that) it rains, what shall we do?", "ja": "もし雨が降ったら、私たちは何をしましょうか。", "sub": "慣用的な独立分詞構文・前置詞化"}, {"n": 75, "en": "All things considered, it was a great success.", "ja": "すべてのことを考慮すると、それは大成功でした。", "sub": "慣用的な独立分詞構文・前置詞化"}]}, {"unit": "8. 比較（発展用法・慣用表現）", "items": [{"n": 76, "en": "He runs much faster than I.", "ja": "彼は私よりずっと速く走ります。", "sub": "比較級の強調"}, {"n": 77, "en": "Mt. Fuji is higher than any other mountain in Japan.", "ja": "富士山は日本の他のどの山よりも高いです。", "sub": "原級・比較級を使った最上級表現"}, {"n": 78, "en": "No other student in the class is as tall as Ken.", "ja": "クラスにケンほど背が高い生徒は他にいません。", "sub": "原級・比較級を使った最上級表現"}, {"n": 79, "en": "He is second to none in English.", "ja": "彼は英語では誰にも劣りません。", "sub": "原級・比較級を使った最上級表現"}, {"n": 80, "en": "He is not so much a scholar as a poet.", "ja": "彼は学者というよりはむしろ詩人です。", "sub": "重要慣用表現"}, {"n": 81, "en": "Much less can he write a novel.", "ja": "まして彼は小説を書くことなどできません。", "sub": "重要慣用表現"}, {"n": 82, "en": "Still more should we respect old people.", "ja": "まして私たちは年長者を敬うべきです。", "sub": "重要慣用表現"}, {"n": 83, "en": "I like him all the better for his faults.", "ja": "欠点があるからこそ、私はかえって一層彼が好きです。", "sub": "重要慣用表現"}, {"n": 84, "en": "She is none the happier for her wealth.", "ja": "彼女は裕福であるにもかかわらず、少しも幸せではありません。", "sub": "重要慣用表現"}, {"n": 85, "en": "I know better than to believe such a lie.", "ja": "私はそんな嘘を信じるほど愚かではありません。", "sub": "重要慣用表現"}, {"n": 86, "en": "At the latest, I will be back by five.", "ja": "遅くとも、5時までには戻ります。", "sub": "重要慣用表現"}, {"n": 87, "en": "Please come as soon as possible. / This river is three times as long as that one.", "ja": "できるだけ早く来てください。 ／ この川はあの川の3倍の長さです。", "sub": "重要慣用表現"}, {"n": 88, "en": "The higher we climb, the colder it becomes. / It is getting warmer and warmer.", "ja": "高く登れば登るほど、ますます寒くなります。 ／ だんだん暖かくなっています。", "sub": "重要慣用表現"}, {"n": 89, "en": "I prefer coffee to tea. / He is senior to me by two years.", "ja": "私は紅茶よりコーヒーのほうが好きです。 ／ 彼は私より2歳年上です。", "sub": "重要慣用表現"}, {"n": 90, "en": "He has no more than 1,000 yen. / He has not more than 1,000 yen.", "ja": "彼はたった1,000円しか持っていません。 ／ 彼は多くとも1,000円しか持っていません。", "sub": "重要慣用表現"}]}, {"unit": "9. 関係詞（所有格・what・関係副詞・非制限用法・複合関係詞）", "items": [{"n": 91, "en": "Look at the house whose roof is red. / This is the house in which he lived.", "ja": "屋根が赤いあの家を見なさい。 ／ これは彼が住んでいた家です。", "sub": "関係代名詞の所有格・前置詞＋関係代名詞"}, {"n": 92, "en": "What he said is true. / This is what I wanted.", "ja": "彼が言ったことは本当です。 ／ これは私が欲しかったものです。", "sub": "関係代名詞 what と重要イディオム"}, {"n": 93, "en": "He is what is called a genius.", "ja": "彼はいわゆる天才です。", "sub": "関係代名詞 what と重要イディオム"}, {"n": 94, "en": "What with the wind and the rain, we couldn't go out.", "ja": "風やら雨やらで、私たちは外出できませんでした。", "sub": "関係代名詞 what と重要イディオム"}, {"n": 95, "en": "What is better, the hotel is very cheap.", "ja": "さらに良いことには、そのホテルはとても安いです。", "sub": "関係代名詞 what と重要イディオム"}, {"n": 96, "en": "He gave me what little money he had.", "ja": "彼は少ないながらも持っていたすべてのお金を私にくれました。", "sub": "関係代名詞 what と重要イディオム"}, {"n": 97, "en": "He is not what he used to be. / Reading is to the mind what food is to the body.", "ja": "彼はかつての彼ではありません。 ／ 読書と心の関係は、食物と体の関係と同じです。", "sub": "関係代名詞 what と重要イディオム"}, {"n": 98, "en": "This is the town where I was born. / Tell me the reason why you were late.", "ja": "これは私が生まれた町です。 ／ あなたが遅刻した理由を教えてください。", "sub": "関係副詞"}, {"n": 99, "en": "I have two brothers, who are doctors. / He failed the exam, which surprised us.", "ja": "私には2人の兄がいますが、2人とも医者です。 ／ 彼は試験に落ちましたが、そのことは私たちを驚かせました。", "sub": "非制限用法"}, {"n": 100, "en": "Whoever says so, I won't believe it.", "ja": "誰がそう言おうとも、私はそれを信じません。", "sub": "複合関係詞"}, {"n": 101, "en": "Whoever comes first will get the prize. / Whatever happens, I will support you.", "ja": "最初に来る人は誰でもその賞をもらえます。 ／ 何が起ころうとも、私はあなたを支えます。", "sub": "複合関係詞"}, {"n": 102, "en": "However hard I tried, I couldn't solve it.", "ja": "どんなに一生懸命やってみても、私はそれを解くことができませんでした。", "sub": "複合関係詞"}]}, {"unit": "10. 仮定法（過去完了・混合・未来・倒置・慣用表現）", "items": [{"n": 103, "en": "If I had known the fact, I would have told you. / If I had taken your advice, I would be happy now.", "ja": "もしその事実を知っていたら、あなたに話していたのに。 ／ もしあなたの忠告を聞いていたら、今頃は幸せだろうに。", "sub": "仮定法過去完了・混合仮定法"}, {"n": 104, "en": "If it should rain tomorrow, the game will be canceled. / If the sun were to rise in the west, I would not change my mind.", "ja": "万一明日雨が降れば、試合は中止になります。 ／ たとえ太陽が西から昇ることがあっても、私は決心を変えません。", "sub": "仮定法未来"}, {"n": 105, "en": "I wish / as if ＋ 仮定法: I wish I had studied harder. / He talks as if he knew everything.", "ja": "もっと一生懸命勉強しておけばよかったなあ。 ／ 彼はまるで何でも知っているかのように話します。", "sub": "仮定法未来"}, {"n": 106, "en": "If の省略（倒置）: Were I in your place, I would accept the offer. / Had I known it, I wouldn't have gone there.", "ja": "もし私があなたの立場なら、その申し出を受け入れるでしょう。 ／ もしそれを知っていたら、そこへは行かなかったでしょう。", "sub": "仮定法未来"}, {"n": 107, "en": "If it were not for water, nothing could live.", "ja": "もし今水がなければ、何も生きられないでしょう。", "sub": "重要慣用表現"}, {"n": 108, "en": "If it had not been for your advice, I would have failed.", "ja": "もしあの時あなたの助言がなかったら、私は失敗していたでしょう。", "sub": "重要慣用表現"}, {"n": 109, "en": "Without your help, I could not have succeeded.", "ja": "あなたの助けがなければ、私は成功できなかったでしょう。", "sub": "重要慣用表現"}, {"n": 110, "en": "As it were, he is a modern hero.", "ja": "いわば、彼は現代の英雄です。", "sub": "重要慣用表現"}, {"n": 111, "en": "If only I had a million dollars!", "ja": "100万ドルありさえすればなあ！", "sub": "重要慣用表現"}, {"n": 112, "en": "I would rather stay home than go out.", "ja": "外出するよりむしろ家にいたいです。", "sub": "重要慣用表現"}, {"n": 113, "en": "It is time you went to bed.", "ja": "もう寝る時間ですよ。", "sub": "重要慣用表現"}]}, {"unit": "11. 接続詞・前置詞（発展）", "items": [{"n": 114, "en": "Both you and I are students. / Either you or he has to go there.", "ja": "あなたも私も生徒です。 ／ あなたか彼のどちらかがそこへ行かなければなりません。", "sub": "相関接続詞"}, {"n": 115, "en": "Neither my father nor my mother likes coffee. / Not only Ken but also Mary was invited.", "ja": "父も母もコーヒーが好きではありません。 ／ ケンだけでなくメアリーも招待されました。", "sub": "相関接続詞"}, {"n": 116, "en": "I don't know whether he will come or not.", "ja": "彼が来るかどうかわかりません。", "sub": "名詞節の whether / if"}, {"n": 117, "en": "Now that you are grown up, you must decide by yourself.", "ja": "今やあなたは大人なのだから、自分で決めなければなりません。", "sub": "複雑な従属接続詞・イディオム"}, {"n": 118, "en": "In case it rains, take an umbrella.", "ja": "雨が降るといけないから、傘を持っていきなさい。", "sub": "複雑な従属接続詞・イディオム"}, {"n": 119, "en": "As far as I know, he is honest.", "ja": "私の知る限りでは、彼は正直です。", "sub": "複雑な従属接続詞・イディオム"}, {"n": 120, "en": "As long as you keep your promise, I'll trust you.", "ja": "あなたが約束を守る限りは、私はあなたを信頼します。", "sub": "複雑な従属接続詞・イディオム"}, {"n": 121, "en": "As soon as I got home, it began to rain. / Although it was raining, they went out.", "ja": "帰宅するとすぐに、雨が降り始めました。 ／ 雨が降っていたけれども、彼らは外出しました。", "sub": "複雑な従属接続詞・イディオム"}, {"n": 122, "en": "He studied hard so that he might pass the exam. / She was so tired that she couldn't walk.", "ja": "彼は試験に合格するために一生懸命勉強しました。 ／ 彼女はあまりに疲れていたので歩くことができませんでした。", "sub": "複雑な従属接続詞・イディオム"}, {"n": 123, "en": "For all his wealth, he is not happy.", "ja": "彼は裕福であるにもかかわらず、幸せではありません。", "sub": "重要な前置詞・群前置詞"}, {"n": 124, "en": "By means of the internet, we can get information easily.", "ja": "インターネットという手段によって、私たちは簡単に情報を得ることができます。", "sub": "重要な前置詞・群前置詞"}, {"n": 125, "en": "In terms of cost, this plan is better.", "ja": "費用の観点からすると、この計画のほうがよいです。", "sub": "重要な前置詞・群前置詞"}, {"n": 126, "en": "On behalf of my family, I thank you.", "ja": "家族を代表して、あなたに感謝します。", "sub": "重要な前置詞・群前置詞"}, {"n": 127, "en": "By the time you get here, I will have finished. / Wait here until I come back.", "ja": "あなたがここに着くまでには、私は終えているでしょう。 ／ 私が戻るまでずっとここで待っていてください。", "sub": "重要な前置詞・群前置詞"}, {"n": 128, "en": "During the summer vacation, I went to Hokkaido. / For three weeks, it rained every day.", "ja": "夏休みの間、私は北海道へ行きました。 ／ 3週間の間、毎日雨が降りました。", "sub": "重要な前置詞・群前置詞"}]}, {"unit": "12. 代名詞・名詞・冠詞・形容詞・副詞（発展）", "items": [{"n": 129, "en": "I have two brothers; one is a teacher, and the other is a lawyer. / Some people like dogs, and others like cats.", "ja": "私には2人の兄がいます。1人は教師で、もう1人は弁護士です。 ／ 犬が好きな人もいれば、猫が好きな人もいます。", "sub": "不定代名詞"}, {"n": 130, "en": "Not all birds can fly. / None of them knew the answer.", "ja": "すべての鳥が飛べるわけではありません。 ／ 彼らのうち誰もその答えを知りませんでした。", "sub": "部分否定・全体否定"}, {"n": 131, "en": "He gave me a piece of good advice.", "ja": "彼は私に1つの良い助言をくれました。", "sub": "不可算名詞の数え方"}, {"n": 132, "en": "Go to school. / Catch him by the arm.", "ja": "（授業を受けに）学校へ行く。 ／ 彼の腕をつかむ。", "sub": "冠詞の慣用用法"}, {"n": 133, "en": "There is little water left in the bottle. / There is a little water left.", "ja": "ボトルにはほとんど水が残っていません。 ／ 少し水が残っています。", "sub": "数量形容詞"}]}, {"unit": "13. 特殊構文（強調・倒置・省略・無生物主語・話法）", "items": [{"n": 134, "en": "It was yesterday that I met him in the park.", "ja": "私が公園で彼に会ったのは、まさに昨日のことでした。", "sub": "強調構文（It is ～ that ...）"}, {"n": 135, "en": "It is not until you lose your health that you realize its value.", "ja": "健康を失って初めて、その価値に気づくものです。", "sub": "強調構文（It is ～ that ...）"}, {"n": 136, "en": "I do hope you will succeed.", "ja": "あなたが成功することを本当に願っています。", "sub": "動詞の強調"}, {"n": 137, "en": "Hardly had I arrived when it began to rain.", "ja": "私が到着するとすぐに、雨が降り始めました。", "sub": "否定語の文頭移動による倒置"}, {"n": 138, "en": "No sooner had he seen me than he ran away.", "ja": "彼は私を見るとすぐに、逃げ出しました。", "sub": "否定語の文頭移動による倒置"}, {"n": 139, "en": "Never have I seen such a beautiful sunset. / Little did I dream of meeting you here.", "ja": "私はこれほど美しい夕日を一度も見たことがありません。 ／ ここであなたに会おうとは夢にも思いませんでした。", "sub": "否定語の文頭移動による倒置"}, {"n": 140, "en": "Here comes the bus. / \"I like music.\" \"So do I.\"", "ja": "ほら、バスが来ました。 ／ 「私は音楽が好きです」「私もです」", "sub": "その他の倒置"}, {"n": 141, "en": "This bus will take you to the station. / What brought you here?", "ja": "このバスに乗れば駅に行けます。 ／ どうしてここへ来たのですか。", "sub": "無生物主語構文"}, {"n": 142, "en": "The heavy rain prevented us from going out.", "ja": "大雨のため、私たちは外出できませんでした。", "sub": "無生物主語構文"}, {"n": 143, "en": "While (I was) walking in the park, I found a wallet. / The news that he won the game surprised us.", "ja": "公園を歩いている間に、私は財布を拾いました。 ／ 彼が試合に勝ったという知らせは私たちを驚かせました。", "sub": "省略・同格"}, {"n": 144, "en": "He said to me, \"I am busy.\" → He told me that he was busy.", "ja": "彼は私に「忙しい」と言った。 → 彼は私に忙しいと言った。", "sub": "話法"}, {"n": 145, "en": "She said to me, \"Open the door.\" → She told me to open the door.", "ja": "彼女は私に「ドアを開けなさい」と言った。 → 彼女は私にドアを開けるように言った。", "sub": "話法"}]}]};
+
+const basicState = {
+  level: "junior",
+  testQuestions: [],
+  testAnswers: [],
+  testResults: [],
+  testIdx: 0,
+  lastRange: [1, 10],
+  cardDir: "ej",
+  cardList: [],
+  cardIdx: 0,
+  cardDone: new Set()
+};
+
+function getFlatBasicExamples(level) {
+  const list = [];
+  (BASIC_EXAMPLES[level] || []).forEach(u => {
+    u.items.forEach(item => list.push({ ...item, unit: u.unit }));
+  });
+  return list;
+}
+
+function selectBasicLevel(level) {
+  basicState.level = level;
+  const label = level === "junior" ? "中学英文法" : "高校英文法";
+  document.getElementById("basic-modesel-title").textContent = `基本例文（${label}）`;
+  document.getElementById("basic-modesel-head").textContent = `📝 ${label}`;
+  go("s-basic-modesel");
+}
+
+// --- 特訓モード ---
+function openBasicDrill() {
+  const level = basicState.level;
+  const label = level === "junior" ? "中学英文法（全27単元）" : "高校英文法（全13単元）";
+  const all = getFlatBasicExamples(level);
+  document.getElementById("basic-drill-title").textContent = label;
+  document.getElementById("basic-drill-sub").textContent = `${label} 基本例文一覧`;
+  document.getElementById("basic-drill-count").textContent = `学習順に例文番号 1〜${all.length} を付与（単元別表示）`;
+
+  const container = document.getElementById("basic-drill-list");
+  container.innerHTML = (BASIC_EXAMPLES[level] || []).map(u => {
+    const rows = u.items.map(it => `
+      <div style="padding:.65rem 0;border-bottom:1px solid var(--bd)">
+        ${it.sub ? `<div style="font-size:.76rem;color:var(--pri);font-weight:700;margin-bottom:.2rem">${it.sub}</div>` : ""}
+        <div style="display:flex;gap:.65rem;align-items:flex-start;flex-wrap:wrap">
+          <span style="background:var(--pri);color:#fff;font-size:.75rem;font-weight:700;padding:.15rem .45rem;border-radius:5px;min-width:2.2rem;text-align:center">${it.n}</span>
+          <div style="flex:1;min-width:230px;font-weight:700;line-height:1.55">${it.en}</div>
+          <div style="flex:1;min-width:230px;color:var(--ink2);font-size:.92rem;line-height:1.55">${it.ja}</div>
+        </div>
+      </div>
+    `).join("");
+    return `
+      <div class="step-card" style="margin-bottom:1rem">
+        <div style="font-weight:800;font-size:1rem;padding-bottom:.45rem;border-bottom:2px solid var(--pri);margin-bottom:.35rem">${u.unit}</div>
+        ${rows}
+      </div>
+    `;
+  }).join("");
+  go("s-basic-drill");
+}
+
+// --- 例文暗記カード ---
+function openBasicCardSetup() {
+  const maxN = getFlatBasicExamples(basicState.level).length;
+  const fInp = document.getElementById("basic-c-from");
+  const tInp = document.getElementById("basic-c-to");
+  fInp.max = maxN; tInp.max = maxN;
+  fInp.value = 1; tInp.value = Math.min(20, maxN);
+  document.getElementById("basic-c-range-info").textContent = `指定可能範囲：1 〜 ${maxN}番`;
+  go("s-basic-card-set");
+}
+
+function setBasicCardDir(dir) {
+  basicState.cardDir = dir;
+  document.getElementById("basic-cdir-ej").classList.toggle("sel", dir === "ej");
+  document.getElementById("basic-cdir-je").classList.toggle("sel", dir === "je");
+}
+
+function startBasicCards() {
+  const all = getFlatBasicExamples(basicState.level);
+  let s = parseInt(document.getElementById("basic-c-from").value, 10) || 1;
+  let e = parseInt(document.getElementById("basic-c-to").value, 10) || all.length;
+  if (s > e) [s, e] = [e, s];
+  s = Math.max(1, s); e = Math.min(all.length, e);
+  const sub = all.filter(x => x.n >= s && x.n <= e);
+  if (!sub.length) { showToast("指定範囲に例文がありません"); return; }
+  basicState.cardList = sub;
+  basicState.cardIdx = 0;
+  basicState.cardDone = new Set();
+  renderBasicCard();
+  go("s-basic-card");
+}
+
+function renderBasicCard() {
+  const item = basicState.cardList[basicState.cardIdx];
+  const total = basicState.cardList.length;
+  document.getElementById("basic-flash-card").classList.remove("flipped");
+  document.getElementById("basic-card-progress").textContent = `(${basicState.cardIdx + 1}/${total})`;
+  document.getElementById("basic-card-counter").textContent = `${basicState.cardIdx + 1} / ${total}`;
+  const isEJ = basicState.cardDir === "ej";
+  document.getElementById("basic-card-front-side").textContent = `表（No.${item.n} ｜ ${item.unit}）`;
+  document.getElementById("basic-card-back-side").textContent = `裏（No.${item.n}）`;
+  document.getElementById("basic-card-front-word").textContent = isEJ ? item.en : item.ja;
+  document.getElementById("basic-card-back-mean").textContent = isEJ ? item.ja : item.en;
+  document.getElementById("basic-card-prev").disabled = basicState.cardIdx === 0;
+  document.getElementById("basic-card-next").disabled = basicState.cardIdx >= total - 1;
+  document.getElementById("basic-card-status").textContent = `覚えた数：${basicState.cardDone.size} / ${total}`;
+}
+
+function flipBasicCard() {
+  document.getElementById("basic-flash-card").classList.toggle("flipped");
+}
+function prevBasicCard() {
+  if (basicState.cardIdx > 0) { basicState.cardIdx--; renderBasicCard(); }
+}
+function nextBasicCard() {
+  if (basicState.cardIdx < basicState.cardList.length - 1) { basicState.cardIdx++; renderBasicCard(); }
+}
+function basicCardOboeta() {
+  const item = basicState.cardList[basicState.cardIdx];
+  basicState.cardDone.add(item.n);
+  if (basicState.cardIdx < basicState.cardList.length - 1) {
+    basicState.cardIdx++;
+    renderBasicCard();
+  } else {
+    renderBasicCard();
+    showToast("🎉 最後のカードまで完了しました！");
+  }
+}
+function basicCardFuan() {
+  const item = basicState.cardList[basicState.cardIdx];
+  basicState.cardDone.delete(item.n);
+  if (basicState.cardIdx < basicState.cardList.length - 1) {
+    basicState.cardIdx++;
+    renderBasicCard();
+  } else {
+    renderBasicCard();
+  }
+}
+
+// --- テストモード ---
+function openBasicTestSetup() {
+  const maxN = getFlatBasicExamples(basicState.level).length;
+  const sInp = document.getElementById("basic-range-start");
+  const eInp = document.getElementById("basic-range-end");
+  sInp.max = maxN; eInp.max = maxN;
+  sInp.value = 1; eInp.value = Math.min(10, maxN);
+  go("s-basic-test-setup");
+}
+
+function shuffleBasicArr(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildBasicTestQuestions(pool) {
+  // 指定範囲の例文を最低1回は必ず使用して20問に割り当てる
+  const base = shuffleBasicArr(pool);
+  const picked = [];
+  for (let i = 0; i < 20; i++) {
+    picked.push(base[i % base.length]);
+  }
+  // 順番厳守：並べ替え5問 → 空所補充5問 → 英和5問 → 和英5問
+  const types = ["sort", "cloze", "ej", "je"];
+  const secNames = [
+    "第1部：並べ替え問題（5問）",
+    "第2部：空所補充問題（5問）",
+    "第3部：英和問題（5問）",
+    "第4部：和英問題（5問）"
+  ];
+  const questions = [];
+
+  picked.forEach((item, idx) => {
+    const secIdx = Math.floor(idx / 5);
+    const type = types[secIdx];
+    const primaryEn = item.en.split(" / ")[0].trim();
+
+    if (type === "sort") {
+      const tokens = primaryEn.replace(/([.,?!])/g, " $1").trim().split(/\s+/);
+      questions.push({
+        type,
+        secLabel: secNames[secIdx],
+        item,
+        prompt: item.ja,
+        tokens: shuffleBasicArr(tokens),
+        answer: primaryEn
+      });
+    } else if (type === "cloze") {
+      const words = primaryEn.split(/\s+/);
+      const candIdx = words.map((w, i) => ({ w, i })).filter(x => x.w.replace(/[^a-zA-Z]/g, "").length >= 3);
+      const chosen = shuffleBasicArr(candIdx).slice(0, Math.min(2, Math.max(1, candIdx.length))).sort((a, b) => a.i - b.i);
+      const blanks = [];
+      const masked = words.map((w, i) => {
+        const hit = chosen.find(c => c.i === i);
+        if (!hit) return w;
+        const clean = w.replace(/[.,?!]+$/, "");
+        const punct = w.slice(clean.length);
+        blanks.push(clean);
+        return `( ${blanks.length} )${punct}`;
+      }).join(" ");
+      questions.push({
+        type,
+        secLabel: secNames[secIdx],
+        item,
+        prompt: item.ja,
+        masked,
+        blanks,
+        answer: blanks.join(" / ")
+      });
+    } else if (type === "ej") {
+      questions.push({
+        type,
+        secLabel: secNames[secIdx],
+        item,
+        prompt: item.en,
+        answer: item.ja
+      });
+    } else {
+      questions.push({
+        type,
+        secLabel: secNames[secIdx],
+        item,
+        prompt: item.ja,
+        answer: item.en
+      });
+    }
+  });
+  return questions;
+}
+
+function startBasicTest() {
+  const all = getFlatBasicExamples(basicState.level);
+  let s = parseInt(document.getElementById("basic-range-start").value, 10) || 1;
+  let e = parseInt(document.getElementById("basic-range-end").value, 10) || all.length;
+  if (s > e) [s, e] = [e, s];
+  s = Math.max(1, s); e = Math.min(all.length, e);
+  const pool = all.filter(x => x.n >= s && x.n <= e);
+  if (!pool.length) { showToast("指定範囲に例文がありません"); return; }
+
+  basicState.lastRange = [s, e];
+  basicState.testQuestions = buildBasicTestQuestions(pool);
+  basicState.testAnswers = basicState.testQuestions.map(q => q.type === "cloze" ? q.blanks.map(() => "") : "");
+  basicState.testIdx = 0;
+  renderBasicQuiz();
+  go("s-basic-test-quiz");
+}
+
+function retryBasicTest() {
+  const all = getFlatBasicExamples(basicState.level);
+  const [s, e] = basicState.lastRange;
+  const pool = all.filter(x => x.n >= s && x.n <= e);
+  basicState.testQuestions = buildBasicTestQuestions(pool);
+  basicState.testAnswers = basicState.testQuestions.map(q => q.type === "cloze" ? q.blanks.map(() => "") : "");
+  basicState.testIdx = 0;
+  renderBasicQuiz();
+  go("s-basic-test-quiz");
+}
+
+function renderBasicQuiz() {
+  const idx = basicState.testIdx;
+  const q = basicState.testQuestions[idx];
+  document.getElementById("basic-quiz-sec-title").textContent = q.secLabel;
+  document.getElementById("basic-quiz-progress").textContent = `${idx + 1} / 20`;
+  document.getElementById("basic-quiz-prev").disabled = idx === 0;
+  document.getElementById("basic-quiz-next").textContent = idx === 19 ? "採点する ✓" : "次の問題 ▶";
+
+  const box = document.getElementById("basic-quiz-container");
+  const curAns = basicState.testAnswers[idx];
+
+  if (q.type === "sort") {
+    const chips = q.tokens.map(t => `<button type="button" class="chip" style="margin:.2rem" onclick="appendBasicSortToken('${t.replace(/'/g, "\\'")}')">${t}</button>`).join("");
+    box.innerHTML = `
+      <div class="step-card">
+        <div style="font-size:.8rem;color:var(--ink3)">問${idx + 1}（並べ替え問題・完答のみ正解・No.${q.item.n}）</div>
+        <div style="font-weight:700;font-size:1.05rem;margin:.5rem 0 1rem">${q.prompt}</div>
+        <div style="margin-bottom:.8rem">${chips}</div>
+        <input type="text" id="basic-q-inp" value="${String(curAns || "").replace(/"/g, "&quot;")}" placeholder="語をタップするか直接入力して英文を完成させてください" style="width:100%;padding:.65rem;font-size:1rem;border:1px solid var(--bd);border-radius:8px"/>
+        <button type="button" class="chip" style="margin-top:.5rem;font-size:.8rem" onclick="document.getElementById('basic-q-inp').value=''">クリア</button>
+      </div>
+    `;
+  } else if (q.type === "cloze") {
+    const inputs = q.blanks.map((_, bi) => `
+      <div style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem">
+        <span style="font-weight:700">(${bi + 1})</span>
+        <input type="text" class="basic-cloze-inp" data-bi="${bi}" value="${String(curAns[bi] || "").replace(/"/g, "&quot;")}" placeholder="空所(${bi + 1})の英単語" style="flex:1;padding:.55rem;font-size:1rem;border:1px solid var(--bd);border-radius:8px"/>
+      </div>
+    `).join("");
+    box.innerHTML = `
+      <div class="step-card">
+        <div style="font-size:.8rem;color:var(--ink3)">問${idx + 1}（空所補充問題・完答のみ正解・No.${q.item.n}）</div>
+        <div style="color:var(--ink2);margin:.4rem 0">${q.prompt}</div>
+        <div style="font-weight:700;font-size:1.05rem;margin:.6rem 0 1rem;line-height:1.6">${q.masked}</div>
+        ${inputs}
+      </div>
+    `;
+  } else {
+    const label = q.type === "ej" ? "次の英文の意味を日本語で答えなさい。" : "次の日本文を英語に直しなさい。";
+    box.innerHTML = `
+      <div class="step-card">
+        <div style="font-size:.8rem;color:var(--ink3)">問${idx + 1}（${label}・完答のみ正解・No.${q.item.n}）</div>
+        <div style="font-weight:700;font-size:1.05rem;margin:.6rem 0 1rem;line-height:1.6">${q.prompt}</div>
+        <textarea id="basic-q-inp" rows="3" placeholder="解答を入力してください" style="width:100%;padding:.65rem;font-size:1rem;border:1px solid var(--bd);border-radius:8px">${curAns || ""}</textarea>
+      </div>
+    `;
+  }
+}
+
+function appendBasicSortToken(tok) {
+  const inp = document.getElementById("basic-q-inp");
+  if (!inp) return;
+  const cur = inp.value.trim();
+  if ([".", ",", "?", "!"].includes(tok)) {
+    inp.value = cur + tok;
+  } else {
+    inp.value = cur ? cur + " " + tok : tok;
+  }
+}
+
+function saveCurrentBasicQuizInput() {
+  const idx = basicState.testIdx;
+  const q = basicState.testQuestions[idx];
+  if (!q) return;
+  if (q.type === "cloze") {
+    const vals = [];
+    document.querySelectorAll(".basic-cloze-inp").forEach(el => vals.push(el.value.trim()));
+    basicState.testAnswers[idx] = vals;
+  } else {
+    const inp = document.getElementById("basic-q-inp");
+    if (inp) basicState.testAnswers[idx] = inp.value.trim();
+  }
+}
+
+function moveBasicQuiz(delta) {
+  saveCurrentBasicQuizInput();
+  const next = basicState.testIdx + delta;
+  if (next < 0) return;
+  if (next >= 20) {
+    finishBasicTest();
+    return;
+  }
+  basicState.testIdx = next;
+  renderBasicQuiz();
+}
+
+function normBasicEn(s) {
+  return String(s || "").toLowerCase().replace(/[.,?!'"()／/—-]/g, "").replace(/\s+/g, " ").trim();
+}
+function normBasicJa(s) {
+  return String(s || "").replace(/[。、．，！？（）()／/\s　]/g, "").trim();
+}
+
+function judgeBasicQuestion(q, ans) {
+  if (q.type === "sort" || q.type === "je") {
+    const user = normBasicEn(ans);
+    if (!user) return false;
+    const candidates = [q.answer, ...q.answer.split(" / ")].map(normBasicEn);
+    return candidates.includes(user);
+  }
+  if (q.type === "cloze") {
+    if (!Array.isArray(ans) || ans.length !== q.blanks.length) return false;
+    return q.blanks.every((b, i) => normBasicEn(ans[i]) === normBasicEn(b));
+  }
+  if (q.type === "ej") {
+    const user = normBasicJa(ans);
+    if (!user) return false;
+    const candidates = [q.answer, ...q.answer.split("／")].map(normBasicJa);
+    return candidates.includes(user);
+  }
+  return false;
+}
+
+function finishBasicTest() {
+  const results = basicState.testQuestions.map((q, i) => {
+    const ans = basicState.testAnswers[i];
+    const ok = judgeBasicQuestion(q, ans);
+    return { q, ans, ok };
+  });
+  basicState.testResults = results;
+  renderBasicTestResult();
+  go("s-basic-test-result");
+}
+
+function renderBasicTestResult() {
+  const results = basicState.testResults;
+  const totalOk = results.filter(r => r.ok).length;
+  const pct = Math.round((totalOk / 20) * 100);
+  const secCounts = [0, 1, 2, 3].map(s => results.slice(s * 5, s * 5 + 5).filter(r => r.ok).length);
+
+  document.getElementById("basic-res-score").textContent = `${totalOk} / 20問（${pct}%）`;
+  document.getElementById("basic-res-breakdown").textContent =
+    `並べ替え: ${secCounts[0]}/5 ｜ 空所補充: ${secCounts[1]}/5 ｜ 英和: ${secCounts[2]}/5 ｜ 和英: ${secCounts[3]}/5`;
+
+  const saveBtn = document.getElementById("basic-save-btn");
+  saveBtn.disabled = false;
+  saveBtn.textContent = "📂 問題を保存する";
+
+  document.getElementById("basic-res-list").innerHTML = results.map((r, i) => {
+    const userDisp = Array.isArray(r.ans) ? r.ans.join(" / ") : (r.ans || "（未解答）");
+    return `
+      <div class="step-card" style="margin-bottom:.7rem;border-left:4px solid ${r.ok ? "var(--ok)" : "var(--ng)"}">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.3rem">
+          <span>問${i + 1}（${r.q.secLabel.split("（")[0]}・No.${r.q.item.n}）</span>
+          <strong style="color:${r.ok ? "var(--ok)" : "var(--ng)"}">${r.ok ? "〇 正解" : "✕ 不正解"}</strong>
+        </div>
+        <div style="font-size:.92rem;margin-bottom:.3rem">${r.q.prompt}</div>
+        <div style="font-size:.85rem;color:var(--ink3)">あなたの解答：${userDisp}</div>
+        <div style="font-size:.9rem;font-weight:700;margin-top:.2rem">答え：${r.q.answer}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+// --- 解答解説（AI解説・AI質問バー・翻訳バー） ---
+async function openBasicExplanation() {
+  const listEl = document.getElementById("basic-exp-list");
+  listEl.innerHTML = basicState.testQuestions.map((q, i) => {
+    const ans = basicState.testAnswers[i];
+    const ok = judgeBasicQuestion(q, ans);
+    const userDisp = Array.isArray(ans) ? ans.join(" / ") : (ans || "（未解答）");
+    return `
+      <div class="step-card" style="margin-bottom:.9rem">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink3)">
+          <span>問${i + 1}｜${q.item.unit}（No.${q.item.n}）</span>
+          <strong style="color:${ok ? "var(--ok)" : "var(--ng)"}">${ok ? "〇 正解" : "✕ 不正解"}</strong>
+        </div>
+        <div style="font-weight:700;margin:.4rem 0">${q.prompt}</div>
+        <div style="font-size:.85rem;color:var(--ink3)">あなたの解答：${userDisp}</div>
+        <div style="font-size:.95rem;font-weight:700;color:var(--pri);margin:.3rem 0">模範解答：${q.answer}</div>
+        <div style="font-size:.86rem;background:var(--bg);padding:.65rem;border-radius:8px;margin-top:.4rem;line-height:1.6">
+          <div><strong>【基本例文】</strong>${q.item.en}</div>
+          <div><strong>【日本語訳】</strong>${q.item.ja}</div>
+          <div id="basic-ai-exp-${i}" style="margin-top:.4rem;color:var(--ink2)">💡 解説を読み込み中…</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+  go("s-basic-test-exp");
+
+  if (typeof callAI === "function") {
+    try {
+      const summary = basicState.testQuestions.map((q, i) => `問${i + 1}[${q.item.unit}]: ${q.item.en} (${q.item.ja})`).join("\n");
+      const prompt = `以下の英文法テスト20問について、各問の文法ポイント解説を1〜2文で分かりやすく日本語で作成し、JSON {"explanations": ["問1解説", ...]} のみで返してください。\n${summary}`;
+      const res = await callAI(prompt, 1600);
+      if (res && Array.isArray(res.explanations)) {
+        res.explanations.forEach((txt, i) => {
+          const el = document.getElementById(`basic-ai-exp-${i}`);
+          if (el) el.textContent = "💡 解説：" + txt;
+        });
+      } else {
+        basicState.testQuestions.forEach((q, i) => {
+          const el = document.getElementById(`basic-ai-exp-${i}`);
+          if (el) el.textContent = `💡 単元ポイント：${q.item.unit}${q.item.sub ? "（" + q.item.sub + "）" : ""}の重要構文です。`;
+        });
+      }
+    } catch (_) {
+      basicState.testQuestions.forEach((q, i) => {
+        const el = document.getElementById(`basic-ai-exp-${i}`);
+        if (el) el.textContent = `💡 単元ポイント：${q.item.unit}${q.item.sub ? "（" + q.item.sub + "）" : ""}の重要構文です。`;
+      });
+    }
+  }
+}
+
+function toggleBasicTransBar() {
+  document.getElementById("basic-trans-bar").classList.toggle("show");
+}
+
+async function doBasicTranslate() {
+  const txt = document.getElementById("basic-trans-inp").value.trim();
+  if (!txt) return;
+  const r = document.getElementById("basic-trans-result");
+  r.textContent = "翻訳中…";
+  r.classList.add("show");
+  try {
+    const prompt = typeof buildTranslatePrompt === "function"
+      ? buildTranslatePrompt(txt)
+      : `次のテキストを英語なら自然な日本語に、日本語なら自然な英語に翻訳し、JSON {"translation":"翻訳結果"} のみで返してください。\n${txt}`;
+    const d = await callAI(prompt, 500);
+    r.textContent = d.translation || d.answer || "翻訳できませんでした";
+  } catch (e) {
+    r.textContent = "エラー: " + e.message;
+  }
+}
+
+// --- 保存機能連携 ---
+function saveBasicTestSet() {
+  const saved = getSaved();
+  const levelLabel = basicState.level === "junior" ? "中学基本例文" : "高校基本例文";
+  const [s, e] = basicState.lastRange;
+  const totalOk = (basicState.testResults || []).filter(r => r.ok).length;
+  saved.unshift({
+    id: Date.now(),
+    type: "basic",
+    label: `${levelLabel} テスト（No.${s}〜${e}）`,
+    savedAt: new Date().toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+    settings: { school: basicState.level },
+    range: [s, e],
+    score: { correct: totalOk, total: 20, isPoints: false },
+    questions: basicState.testQuestions,
+    answers: basicState.testAnswers
+  });
+  setSaved(saved.slice(0, 50));
+  const btn = document.getElementById("basic-save-btn");
+  btn.disabled = true;
+  btn.textContent = "✅ 保存しました";
+  showToast("📂 保存しました！");
+}
+
+function loadSavedBasicTest(item, openExp) {
+  basicState.level = item.settings?.school || "junior";
+  basicState.lastRange = item.range || [1, 10];
+  basicState.testQuestions = item.questions || [];
+  if (openExp) {
+    basicState.testAnswers = item.answers || basicState.testQuestions.map(q => q.type === "cloze" ? q.blanks.map(() => "") : "");
+    basicState.testResults = basicState.testQuestions.map((q, i) => ({
+      q,
+      ans: basicState.testAnswers[i],
+      ok: judgeBasicQuestion(q, basicState.testAnswers[i])
+    }));
+    openBasicExplanation();
+  } else {
+    basicState.testAnswers = basicState.testQuestions.map(q => q.type === "cloze" ? q.blanks.map(() => "") : "");
+    basicState.testIdx = 0;
+    renderBasicQuiz();
+    go("s-basic-test-quiz");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btnBasic = document.getElementById("mc-basic");
+  if (btnBasic) btnBasic.onclick = () => go("s-basic-level");
+
+  const bfc = document.getElementById("basic-flash-card");
+  if (bfc) {
+    bfc.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      flipBasicCard();
     });
   }
 });
