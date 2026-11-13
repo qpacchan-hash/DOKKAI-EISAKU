@@ -2410,13 +2410,18 @@ function renderCard(){
   const progTxt=`${A.cardIdx+1} / ${A.cardWords.length}枚`;
   const progEl=document.getElementById("card-progress");if(progEl)progEl.textContent=progTxt;
   const cntEl=document.getElementById("card-counter");if(cntEl)cntEl.textContent=progTxt;
-  $("flash-inner").classList.remove("flipped");
+  const fi=document.getElementById("flash-inner");
+  if(fi)fi.classList.remove("flipped");
+  const ffs=document.getElementById("card-front-side");
+  const ffw=document.getElementById("card-front-word");
+  const fbs=document.getElementById("card-back-side");
+  const fbm=document.getElementById("card-back-mean");
   if(A.c.dir==="e2j"||A.c.dir===""){
-    $("card-front-side").textContent="英語";$("card-front-word").textContent=w.word;
-    $("card-back-side").textContent="意味";$("card-back-mean").textContent=w.meaning;
+    if(ffs)ffs.textContent="英語";if(ffw)ffw.textContent=w.word;
+    if(fbs)fbs.textContent="意味";if(fbm)fbm.textContent=w.meaning;
   }else{
-    $("card-front-side").textContent="意味";$("card-front-word").textContent=w.meaning;
-    $("card-back-side").textContent="英語";$("card-back-mean").textContent=w.word;
+    if(ffs)ffs.textContent="意味";if(ffw)ffw.textContent=w.meaning;
+    if(fbs)fbs.textContent="英語";if(fbm)fbm.textContent=w.word;
   }
   const statusEl=document.getElementById("card-status");
   if(statusEl)statusEl.textContent=A.cardFuan.has(A.cardIdx)?"🔖 不安リストに追加済み":"";
@@ -2424,8 +2429,6 @@ function renderCard(){
   const nextBtn=document.getElementById("card-next");
   if(prevBtn)prevBtn.disabled=A.cardIdx===0;
   if(nextBtn)nextBtn.disabled=A.cardIdx>=A.cardWords.length-1;
-  // ボタンのイベントを毎回再設定
-  setupCardButtons();
 }
 function flipCard(){
   const fi=document.getElementById("flash-inner");if(fi)fi.classList.toggle("flipped");
