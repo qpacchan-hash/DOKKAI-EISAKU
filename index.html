@@ -2350,8 +2350,8 @@ function renderCard(){
   // words.js の形式は {n, w, m} → word/meaning に変換
   const w={word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""};
   const progTxt=`${A.cardIdx+1} / ${A.cardWords.length}枚`;
-  const progEl=$("card-progress");if(progEl)progEl.textContent=progTxt;
-  const cntEl=$("card-counter");if(cntEl)cntEl.textContent=progTxt;
+  const progEl=document.getElementById("card-progress");if(progEl)progEl.textContent=progTxt;
+  const cntEl=document.getElementById("card-counter");if(cntEl)cntEl.textContent=progTxt;
   $("flash-inner").classList.remove("flipped");
   if(A.c.dir==="e2j"||A.c.dir===""){
     $("card-front-side").textContent="英語";$("card-front-word").textContent=w.word;
@@ -2367,9 +2367,11 @@ function flipCard(e){
   if(e)e.stopPropagation();
   const fi=$("flash-inner");if(fi)fi.classList.toggle("flipped");
 }
-function prevCard(){if(A.cardIdx>0){A.cardIdx--;renderCard()}}
+function prevCard(){
+  if(A.cardIdx>0){A.cardIdx--;renderCard()}
+}
 function nextCard(){
-  if(A.cardIdx<A.cardIdx.length-1){A.cardIdx++;renderCard()}
+  if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}
   else{showCardResult()}
 }
 function showCardResult(){
@@ -2467,30 +2469,32 @@ function restartCard(){
   renderCard();
 }
 function cardOboeta(){
-  const btn=document.querySelector(".btn-oboeta");
-  if(btn){btn.style.transform="scale(0.9)";setTimeout(()=>{btn.style.transform=""},200)}
-  const statusEl=$("card-status");
-  if(statusEl)statusEl.textContent="✅ 覚えた！";
+  const raw=A.cardWords[A.cardIdx];
+  if(!raw)return;
   A.cardFuan.delete(A.cardIdx);
+  showToast("✅ 覚えた！");
+  const statusEl=document.getElementById("card-status");
+  if(statusEl)statusEl.textContent="✅ 覚えた！";
   setTimeout(()=>{
-    if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}
+    A.cardIdx++;
+    if(A.cardIdx<A.cardWords.length){renderCard()}
     else{showCardResult()}
-  },350);
+  },400);
 }
 function cardFuan(){
   const raw=A.cardWords[A.cardIdx];
+  if(!raw)return;
   A.cardFuan.add(A.cardIdx);
   addWeakWord({n:raw.n||0,word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""});
-  // ボタンアニメ
-  const btn=document.querySelector(".btn-fuan");
-  if(btn){btn.style.transform="scale(0.9)";setTimeout(()=>{btn.style.transform=""},200)}
-  const statusEl=$("card-status");
-  if(statusEl)statusEl.textContent="🔖 苦手リストに追加";
   showToast("⚠️ 苦手リストに追加しました");
+  const statusEl=document.getElementById("card-status");
+  if(statusEl)statusEl.textContent="🔖 苦手リストに追加";
+  // 少し待ってから次へ
   setTimeout(()=>{
-    if(A.cardIdx<A.cardWords.length-1){A.cardIdx++;renderCard()}
+    A.cardIdx++;
+    if(A.cardIdx<A.cardWords.length){renderCard()}
     else{showCardResult()}
-  },350);
+  },400);
 }
 
 // ================================================================
