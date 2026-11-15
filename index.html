@@ -1692,7 +1692,7 @@ const A = {
   cardWords:[], cardIdx:0, cardFuan:new Set(),
   // sent
   s:{book:"jhs",from:1,to:30},
-  sentWords:[], sentData:null,
+  sentWords:[], sentData:null, sentCardIdx:0,
   // weak
   weakWords:[],
   weakCardWords:[], weakCardIdx:0,
@@ -3190,8 +3190,15 @@ $("btn-sent-start").onclick=async()=>{
   if(!words.length){alert("指定範囲に単語がありません");return}
   A.sentWords=words.map(w=>({...w,word:w.w||w.word||"",meaning:w.m||w.meaning||""}));
   go("s-gen");$("gen-msg").textContent="AIが例文を作成中…";
-  try{const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);A.sentData=d;renderSent();go("s-sent")}
-  catch(e){go("s-sent-set");alert("エラー: "+e.message)}
+  try{
+    console.log("例文生成開始, sentWords:", A.sentWords.length);
+    const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);
+    console.log("例文生成完了:", d);
+    A.sentData=d;renderSent();go("s-sent");
+  }catch(e){
+    console.error("例文エラー:", e);
+    go("s-sent-set");alert("エラー: "+e.message)
+  }
 };
 $("btn-sent-new").onclick=async()=>{
   go("s-gen");$("gen-msg").textContent="AIが新しい例文を作成中…";
