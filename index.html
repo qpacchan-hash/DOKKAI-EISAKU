@@ -1573,7 +1573,7 @@ input,textarea{font-family:var(--fu)}
     </div>
     <div style="font-size:.8rem;color:var(--ink3)" id="s-range-info"></div>
   </div>
-  <button class="btn-gen" id="btn-sent-start" onclick="startSentGenerate()" style="opacity:0.35">例文を生成 ▶</button>
+  <button class="btn-gen" id="btn-sent-start" onclick="startSentGenerate()" style="opacity:0.5">例文を生成 ▶</button>
 </div></div>
 
 <!-- S31: 単語例文 -->
@@ -1948,7 +1948,7 @@ $("btn-anki-sent").onclick=()=>{
   document.querySelectorAll("#s-sent-set .chip[data-g]").forEach(c=>c.classList.remove("sel"));
   const sfrom=$("s-from");if(sfrom)sfrom.value="";
   const sto=$("s-to");if(sto)sto.value="";
-  const btn=$("btn-sent-start");if(btn){btn.disabled=true;btn.style.opacity="0.35";}
+  const btn=$("btn-sent-start");if(btn){btn.style.opacity="0.35";}
   go("s-sent-set");
 };
 $("btn-anki-weak").onclick=()=>{renderWeakList();go("s-weak")};
@@ -2081,7 +2081,6 @@ function chkSent(){
   const ok=!!(A.s.book&&f>0&&t>=f);
   const startBtn=document.getElementById("btn-sent-start");
   if(startBtn)startBtn.style.opacity=ok?"1":"0.35";
-  // disabledは設定しない（onclickで直接バリデーションするため）
 }
 
 // ================================================================
