@@ -1430,7 +1430,6 @@ input,textarea{font-family:var(--fu)}
     <button class="chip wide" id="btn-anki-card" style="padding:.85rem;font-size:.95rem">🃏 単語カード<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">タップで裏返し・覚えた！/不安…</span></button>
     <button class="chip wide" id="btn-anki-sent" style="padding:.85rem;font-size:.95rem">📖 単語例文<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">AI生成の例文で文脈を確認</span></button>
     <button class="chip wide" id="btn-anki-weak" style="padding:.85rem;font-size:.95rem">⚠️ 苦手単語リスト<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">間違えた・不安な単語を管理</span></button>
-    <button class="chip wide" id="btn-anki-weak-sent" style="padding:.85rem;font-size:.95rem">📝 苦手基本例文<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">不安…を押した例文を管理</span></button>
   </div>
 </div>
 </div>
@@ -1898,7 +1897,6 @@ $("btn-anki-sent").onclick=()=>{
   go("s-sent-set");
 };
 $("btn-anki-weak").onclick=()=>{renderWeakList();go("s-weak")};
-$("btn-anki-weak-sent").onclick=()=>{renderWeakSentList();go("s-weak-sent")};
 $("btn-weak-card").onclick=()=>{startWeakCard()};
 
 // ================================================================
@@ -4456,24 +4454,6 @@ function saveBasicQuiz(){
     <textarea class="ai-ask-inp" id="ai-ask-inp" placeholder="この問題や解説について質問してください…" rows="1"></textarea>
     <button class="ai-ask-send" id="ai-ask-send" onclick="sendAiQuestion()">送信</button>
   </div>
-</div>
-
-<!-- 苦手基本例文リスト -->
-<div id="s-weak-sent" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-anki-top')">← 戻る</button>
-  <span style="font-weight:700;font-size:.93rem">⚠️ 苦手基本例文</span>
-  <div style="width:70px"></div>
-</div></header>
-<div class="weak-wrap">
-  <div style="font-size:.88rem;color:var(--ink2);background:var(--warnl);border:1px solid var(--warn);border-radius:var(--r);padding:.75rem 1rem;line-height:1.6;margin-bottom:.75rem">
-    ⚠️ 不安…を押した例文が保存されます。タップして和訳を確認しましょう。
-  </div>
-  <div id="weak-sent-list"></div>
-  <div style="display:flex;gap:.75rem;justify-content:center;margin-top:1.5rem">
-    <button class="chip red" id="btn-weak-sent-clear" onclick="if(confirm('苦手例文を全て削除しますか？')){setWeakSents([]);renderWeakSentList();showToast('削除しました')}">🗑 全て削除</button>
-  </div>
-</div>
 </div>
 
 
