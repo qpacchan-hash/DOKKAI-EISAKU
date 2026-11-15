@@ -1953,7 +1953,6 @@ $("btn-anki-sent").onclick=()=>{
 };
 $("btn-anki-weak").onclick=()=>{renderWeakList();go("s-weak")};
 $("btn-anki-weak-sent").onclick=()=>{renderWeakSentList();go("s-weak-sent")};
-$("btn-weak-sent-clear").onclick=()=>{if(confirm("苦手例文を全て削除しますか？")){setWeakSents([]);renderWeakSentList();showToast("削除しました")}};
 $("btn-weak-card").onclick=()=>{startWeakCard()};
 
 // ================================================================
@@ -4366,7 +4365,7 @@ function renderSent(){
   </div>
   <div id="weak-sent-list"></div>
   <div style="display:flex;gap:.75rem;justify-content:center;margin-top:1.5rem">
-    <button class="chip red" id="btn-weak-sent-clear">🗑 全て削除</button>
+    <button class="chip red" id="btn-weak-sent-clear" onclick="if(confirm('苦手例文を全て削除しますか？')){setWeakSents([]);renderWeakSentList();showToast('削除しました')}">🗑 全て削除</button>
   </div>
 </div>
 </div>
