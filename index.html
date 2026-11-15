@@ -1284,64 +1284,7 @@ input,textarea{font-family:var(--fu)}
 </div>
 </div>
 
-<!-- S_BASIC_8: 例文暗記カード 設定 -->
-<div id="s-basic-card-set" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-basic-drill')">← 一覧へ</button>
-  <div class="hd-logo"><span>例文暗記カード 設定</span></div>
-  <div style="width:70px"></div>
-</div></header>
-<div class="vocab-set-wrap">
-  <div class="step-card"><div class="step-hd">STEP 1　例文番号の範囲</div>
-    <div class="range-row">
-      <label>No.</label>
-      <input type="number" class="range-inp" id="basic-c-from" min="1" value="1"/>
-      <span class="range-sep">〜</span>
-      <input type="number" class="range-inp" id="basic-c-to" min="1" value="20"/>
-    </div>
-    <div style="font-size:.8rem;color:var(--ink3);margin-top:.35rem" id="basic-c-range-info"></div>
-  </div>
-  <div class="step-card"><div class="step-hd">STEP 2　表示方向</div><div class="chip-row">
-    <button class="chip sel" id="basic-cdir-ej" onclick="setBasicCardDir('ej')">表：英語（英和） → 裏：日本語</button>
-    <button class="chip" id="basic-cdir-je" onclick="setBasicCardDir('je')">表：日本語（和英） → 裏：英語</button>
-  </div></div>
-  <button class="btn-gen" onclick="startBasicCards()">カードを開始 ▶</button>
-</div>
-</div>
 
-<!-- S_BASIC_9: 例文暗記カード -->
-<div id="s-basic-card" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-basic-card-set')">← 設定</button>
-  <span style="font-weight:700;font-size:.85rem">🃏 例文暗記カード <span id="basic-card-progress"></span></span>
-  <button class="hd-home" onclick="go('s-top')">🏠</button>
-</div></header>
-<div class="card-area">
-  <div class="flash-card" id="basic-flash-card" style="max-width:560px;min-height:240px">
-    <div class="flash-inner" id="basic-flash-inner">
-      <div class="flash-front" style="padding:1.4rem">
-        <div class="flash-side" id="basic-card-front-side">表</div>
-        <div class="flash-word" id="basic-card-front-word" style="font-size:1.15rem;line-height:1.6"></div>
-        <div class="flash-hint">タップして裏返す</div>
-      </div>
-      <div class="flash-back" style="padding:1.4rem">
-        <div class="flash-side" id="basic-card-back-side">裏</div>
-        <div class="flash-mean" id="basic-card-back-mean" style="font-size:1.05rem;line-height:1.6"></div>
-      </div>
-    </div>
-  </div>
-  <div class="card-nav">
-    <button class="chip" id="basic-card-prev" onclick="prevBasicCard()">◀ 前へ</button>
-    <span class="card-counter" id="basic-card-counter">1 / 1</span>
-    <button class="chip" id="basic-card-next" onclick="nextBasicCard()">次へ ▶</button>
-  </div>
-  <div class="card-acts">
-    <button class="btn-oboeta" onclick="basicCardOboeta()">覚えた！ ✓</button>
-    <button class="btn-fuan" onclick="basicCardFuan()">不安… △</button>
-  </div>
-  <div style="font-size:.82rem;color:var(--ink3)" id="basic-card-status"></div>
-</div>
-</div>
 
 <!-- S21: 保存した問題 -->
 <div id="s-saved" class="scr">
