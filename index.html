@@ -1573,7 +1573,7 @@ input,textarea{font-family:var(--fu)}
     </div>
     <div style="font-size:.8rem;color:var(--ink3)" id="s-range-info"></div>
   </div>
-  <button class="btn-gen" id="btn-sent-start" disabled>例文を生成 ▶</button>
+  <button class="btn-gen" id="btn-sent-start" onclick="startSentGenerate()" style="opacity:0.35">例文を生成 ▶</button>
 </div></div>
 
 <!-- S31: 単語例文 -->
@@ -2064,21 +2064,24 @@ function chkVTest(){
   const btn=$("btn-vtest-start");if(btn)btn.style.opacity=ok?"1":"0.35";
 }
 function chkCard(){
-  const f=parseInt($("c-from").value||"0"),t=parseInt($("c-to").value||"0");
-  const ok=A.c.book&&f>0&&t>=f&&A.c.dir;
-  $("btn-card-start").disabled=!ok;
-  const btn=$("btn-card-start");if(btn)btn.style.opacity=ok?"1":"0.35";
+  const fEl=document.getElementById("c-from");
+  const tEl=document.getElementById("c-to");
+  const f=parseInt(fEl?.value||"0");
+  const t=parseInt(tEl?.value||"0");
+  const ok=!!(A.c.book&&f>0&&t>=f&&A.c.dir);
+  const btn=document.getElementById("btn-card-start");
+  if(btn){btn.disabled=!ok;btn.style.opacity=ok?"1":"0.35";}
 }
 function chkSent(){
-  const fInp=$("s-from");const tInp=$("s-to");
-  // 入力欄の値を A.s に同期
+  const fInp=document.getElementById("s-from");
+  const tInp=document.getElementById("s-to");
   if(fInp&&fInp.value)A.s.from=parseInt(fInp.value)||0;
   if(tInp&&tInp.value)A.s.to=parseInt(tInp.value)||0;
-  const f=A.s.from||0;
-  const t=A.s.to||0;
+  const f=A.s.from||0;const t=A.s.to||0;
   const ok=!!(A.s.book&&f>0&&t>=f);
-  const startBtn=$("btn-sent-start");
-  if(startBtn){startBtn.disabled=!ok;startBtn.style.opacity=ok?"1":"0.35";}
+  const startBtn=document.getElementById("btn-sent-start");
+  if(startBtn)startBtn.style.opacity=ok?"1":"0.35";
+  // disabledは設定しない（onclickで直接バリデーションするため）
 }
 
 // ================================================================
@@ -3194,26 +3197,30 @@ function cardFuan(){
 // ================================================================
 // 単語例文
 // ================================================================
-$("btn-sent-start").onclick=async()=>{
-  A.s.from=parseInt($("s-from").value);A.s.to=parseInt($("s-to").value);
+async function startSentGenerate(){
+  const sfrom=document.getElementById("s-from");
+  const sto=document.getElementById("s-to");
+  if(sfrom&&sfrom.value)A.s.from=parseInt(sfrom.value)||A.s.from;
+  if(sto&&sto.value)A.s.to=parseInt(sto.value)||A.s.to;
+  if(!A.s.book){alert("単語帳を選択してください");return;}
+  if(!A.s.from||!A.s.to||A.s.to<A.s.from){alert("範囲を入力してください");return;}
   const words=getWordList(A.s.book).filter(w=>w.n>=A.s.from&&w.n<=A.s.to);
-  if(!words.length){alert("指定範囲に単語がありません");return}
+  if(!words.length){alert("指定範囲に単語がありません");return;}
   A.sentWords=words.map(w=>({...w,word:w.w||w.word||"",meaning:w.m||w.meaning||""}));
-  go("s-gen");$("gen-msg").textContent="AIが例文を作成中…";
+  go("s-gen");document.getElementById("gen-msg").textContent="AIが例文を作成中…";
   try{
-    console.log("例文生成開始, sentWords:", A.sentWords.length);
     const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);
-    console.log("例文生成完了:", d);
-    A.sentData=d;renderSent();go("s-sent");
+    A.sentData=d;A.sentCardIdx=0;renderSent();go("s-sent");
   }catch(e){
-    console.error("例文エラー:", e);
-    go("s-sent-set");alert("エラー: "+e.message)
+    go("s-sent-set");alert("エラー: "+e.message);
   }
-};
+}
 $("btn-sent-new").onclick=async()=>{
-  go("s-gen");$("gen-msg").textContent="AIが新しい例文を作成中…";
-  try{const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);A.sentData=d;renderSent();go("s-sent")}
-  catch(e){go("s-sent");alert("エラー: "+e.message)}
+  go("s-gen");document.getElementById("gen-msg").textContent="AIが新しい例文を作成中…";
+  try{
+    const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);
+    A.sentData=d;A.sentCardIdx=0;renderSent();go("s-sent");
+  }catch(e){go("s-sent");alert("エラー: "+e.message);}
 };
 
 
