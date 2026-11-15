@@ -1914,6 +1914,7 @@ $("mc-read").onclick=()=>{resetReadSet();go("s-read-modesel");};
 $("mc-write").onclick=()=>{resetWriteSet();go("s-write-modesel");};
 $("mc-vocab").onclick=()=>go("s-vocab-top");
 $("mc-saved").onclick=()=>{go("s-saved");setTimeout(renderSaved,50)};
+$("mc-basic").onclick=()=>go("s-sent-set");
 
 // 読解モード選択
 $("btn-read-test").onclick=()=>{A.rMode="test";$("read-set-title").textContent="読解 設定（テストモード）";$("read-set-back").onclick=()=>go("s-read-modesel");go("s-read-set")};
