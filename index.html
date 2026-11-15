@@ -3635,6 +3635,173 @@ document.addEventListener("click",e2=>{
   setTimeout(()=>ripple.remove(),600);
 });
 
+
+// ================================================================
+// 苦手基本例文 (localStorage)
+// ================================================================
+function getWeakSents(){try{return JSON.parse(localStorage.getItem("weak_sents_v4")||"[]")}catch{return[]}}
+function setWeakSents(arr){try{localStorage.setItem("weak_sents_v4",JSON.stringify(arr))}catch{}}
+function addWeakSent(s){
+  const list=getWeakSents();
+  if(!list.find(x=>x.sentence===s.sentence)){
+    list.push({word:s.word||"",sentence:s.sentence||"",sentenceJa:s.sentenceJa||""});
+    setWeakSents(list);
+  }
+}
+function renderWeakSentList(){
+  const list=getWeakSents();
+  const el=document.getElementById("weak-sent-list");
+  if(!el)return;
+  el.innerHTML="";
+  if(!list.length){
+    el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--ink3)">苦手な例文はまだありません</div>';
+    return;
+  }
+  list.forEach((s,i)=>{
+    const row=document.createElement("div");row.className="weak-sent-row";
+    const word=document.createElement("span");word.className="weak-sent-word";word.textContent=s.word;
+    const right=document.createElement("div");right.style.cssText="flex:1;min-width:0";
+    const sent=document.createElement("div");sent.className="weak-sent-sent";sent.textContent=s.sentence;
+    right.appendChild(sent);
+    if(s.sentenceJa){
+      const jaBtn=document.createElement("span");
+      jaBtn.style.cssText="font-size:.78rem;color:var(--acc);cursor:pointer;display:inline-block;margin-top:.25rem";
+      jaBtn.textContent="🔍 和訳を見る";
+      const jaText=document.createElement("div");
+      jaText.className="weak-sent-ja";jaText.style.display="none";jaText.textContent=s.sentenceJa;
+      let open=false;
+      jaBtn.onclick=()=>{open=!open;jaText.style.display=open?"block":"none";jaBtn.textContent=open?"🔼 和訳を隠す":"🔍 和訳を見る";};
+      right.append(jaBtn,jaText);
+    }
+    const del=document.createElement("span");del.className="weak-sent-del";del.textContent="削除";
+    del.onclick=()=>{const all=getWeakSents();all.splice(i,1);setWeakSents(all);renderWeakSentList();};
+    row.append(word,right,del);el.appendChild(row);
+  });
+}
+
+
+// ================================================================
+// 単語例文カード (フラッシュカード方式)
+// ================================================================
+function renderSent(){
+  A.sentCardIdx=0;
+  renderSentCard();
+}
+function renderSentCard(){
+  const sentences=(A.sentData&&A.sentData.sentences?A.sentData.sentences:[]).filter(function(s){return s&&s.sentence;});
+  if(!sentences.length){showToast("例文が見つかりません");return;}
+  const idx=A.sentCardIdx||0;
+  const s=sentences[idx];if(!s)return;
+  const rawW=A.sentWords?A.sentWords.find(function(x){return(x.word||x.w||"")===s.word;}):null;
+  const meaning=rawW?(rawW.meaning||rawW.m||""):"";
+  const wordEl=document.getElementById("sent-flash-word");
+  if(wordEl)wordEl.textContent=s.word+(meaning?" ("+meaning+")":"");
+  const sentEl=document.getElementById("sent-flash-sent");
+  if(sentEl)sentEl.textContent=s.sentence||"";
+  const wordBack=document.getElementById("sent-flash-word-back");
+  if(wordBack)wordBack.textContent=s.word+(meaning?" ("+meaning+")":"");
+  const jaEl=document.getElementById("sent-flash-ja");
+  if(jaEl)jaEl.textContent=s.sentenceJa||s.sentence||"";
+  const prog=document.getElementById("sent-prog");
+  if(prog)prog.textContent=(idx+1)+" / "+sentences.length;
+  const prevBtn=document.getElementById("sent-prev");
+  const nextBtn=document.getElementById("sent-next");
+  if(prevBtn)prevBtn.disabled=(idx===0);
+  if(nextBtn)nextBtn.disabled=(idx>=sentences.length-1);
+  const fi=document.getElementById("sent-flash-inner");
+  if(fi)fi.classList.remove("flipped");
+  const status=document.getElementById("sent-status");
+  if(status)status.textContent="";
+}
+function flipSentCard(e){
+  if(e&&e.target&&e.target.closest&&e.target.closest("button"))return;
+  const fi=document.getElementById("sent-flash-inner");
+  if(fi)fi.classList.toggle("flipped");
+}
+function prevSentCard(){
+  if((A.sentCardIdx||0)>0){A.sentCardIdx--;renderSentCard();}
+}
+function nextSentCard(){
+  const sentences=(A.sentData&&A.sentData.sentences?A.sentData.sentences:[]).filter(function(s){return s&&s.sentence;});
+  if((A.sentCardIdx||0)<sentences.length-1){A.sentCardIdx++;renderSentCard();}
+}
+function sentOboeta(){
+  showToast("✅ 覚えた！");
+  const status=document.getElementById("sent-status");
+  if(status)status.textContent="✅ 覚えた！";
+  const sentences=(A.sentData&&A.sentData.sentences?A.sentData.sentences:[]).filter(function(s){return s&&s.sentence;});
+  setTimeout(function(){
+    if((A.sentCardIdx||0)<sentences.length-1){A.sentCardIdx++;renderSentCard();}
+    else{showSentResult();}
+  },350);
+}
+function sentFuan(){
+  const sentences=(A.sentData&&A.sentData.sentences?A.sentData.sentences:[]).filter(function(s){return s&&s.sentence;});
+  const s=sentences[A.sentCardIdx||0];
+  if(s){addWeakSent(s);showToast("⚠️ 苦手リストに追加しました");}
+  const status=document.getElementById("sent-status");
+  if(status)status.textContent="🔖 苦手リストに追加";
+  setTimeout(function(){
+    if((A.sentCardIdx||0)<sentences.length-1){A.sentCardIdx++;renderSentCard();}
+    else{showSentResult();}
+  },350);
+}
+function showSentResult(){
+  const area=document.querySelector("#s-sent .card-area");
+  if(!area)return;
+  area.innerHTML='\
+    <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.5rem;padding:1rem">\
+      <div style="font-size:1.3rem;font-weight:800;color:var(--ink)">🎉 全例文を確認しました！</div>\
+      <div style="display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:360px">\
+        <button class="btn-start" style="font-size:1.1rem;padding:.9rem 2rem" onclick="restartSentCard()">🔄 もう一度やる</button>\
+        <button class="chip wide" onclick="go(\'s-sent-set\')">⚙ 設定に戻る</button>\
+        <button class="chip wide red" onclick="go(\'s-top\')">🏠 ホームへ</button>\
+      </div>\
+    </div>';
+  launchConfetti(80);
+}
+function restartSentCard(){
+  const area=document.querySelector("#s-sent .card-area");
+  if(!area)return;
+  area.innerHTML='\
+  <div class="sent-flash-wrap" id="sent-flash-wrap" onclick="flipSentCard(event)">\
+    <div class="sent-flash-inner" id="sent-flash-inner">\
+      <div class="sent-flash-front" onclick="flipSentCard(event)">\
+        <div class="sent-flash-word" id="sent-flash-word"></div>\
+        <div class="sent-flash-sent" id="sent-flash-sent"></div>\
+        <div class="sent-flash-hint">タップして和訳を確認</div>\
+      </div>\
+      <div class="sent-flash-back" onclick="flipSentCard(event)">\
+        <div class="sent-flash-word" id="sent-flash-word-back"></div>\
+        <div class="sent-flash-ja" id="sent-flash-ja"></div>\
+        <div class="sent-flash-hint">もう一度タップで表に戻る</div>\
+      </div>\
+    </div>\
+  </div>\
+  <div class="sent-flash-nav">\
+    <button class="chip" id="sent-prev" onclick="prevSentCard()">◀ 前へ</button>\
+    <span class="sent-prog" id="sent-prog"></span>\
+    <button class="chip" id="sent-next" onclick="nextSentCard()">次へ ▶</button>\
+  </div>\
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">\
+    <button class="btn-oboeta" onclick="sentOboeta()" style="font-size:.9rem;padding:.55rem 1.4rem">覚えた！ ✓</button>\
+    <button class="btn-fuan" onclick="sentFuan()" style="font-size:.9rem;padding:.55rem 1.4rem">不安… △</button>\
+  </div>\
+  <div style="font-size:.82rem;color:var(--ink3);text-align:center" id="sent-status"></div>\
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem">\
+    <button class="chip" id="btn-sent-new2">🔄 新しい例文を生成</button>\
+    <button class="chip red" onclick="go(\'s-top\')">終了</button>\
+  </div>';
+  const nb=document.getElementById("btn-sent-new2");
+  if(nb)nb.onclick=async function(){
+    go("s-gen");document.getElementById("gen-msg").textContent="AIが新しい例文を作成中…";
+    try{const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);A.sentData=d;A.sentCardIdx=0;renderSentCard();go("s-sent");}
+    catch(e){go("s-sent");alert("エラー: "+e.message);}
+  };
+  A.sentCardIdx=0;
+  renderSentCard();
+}
+
 </script>
 
 <!-- AI質問バー（採点・解説画面で表示） -->
