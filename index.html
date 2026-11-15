@@ -327,6 +327,8 @@ input,textarea{font-family:var(--fu)}
 .flash-back{background:var(--accl);border:2px solid var(--acc);transform:rotateY(180deg);pointer-events:none}
 .flash-inner.flipped .flash-back{pointer-events:auto}
 .flash-inner.flipped .flash-front{pointer-events:none}
+.flash-inner.flipped .flash-back{pointer-events:auto}
+.flash-inner.flipped .flash-front{pointer-events:none}
 .flash-word{font-size:2rem;font-weight:800;color:var(--ink);font-family:var(--fe)}
 .flash-mean{font-size:1.5rem;font-weight:700;color:var(--acc)}
 .flash-side{font-size:.78rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em}
@@ -2230,8 +2232,9 @@ function buildVocabScorePrompt(words, answers){
     const word=w.w||w.word||"";
     const meaning=w.m||w.meaning||"";
     const dir=w._dir==="e2j"?"英語→和訳":"和訳→英語";
+    const posStr=getAllPOSStr(meaning);
     if(dir==="英語→和訳"){
-      return `Q${i+1}: [英語→和訳] 英単語「${word}」| 模範解答:「${meaning}」| 生徒の回答:「${ans}」`;
+      return `Q${i+1}: [英語→和訳] 英単語「${word}」| この単語の全品詞:${posStr} | 全ての意味:「${meaning}」| 生徒の回答:「${ans}」`;
     }else{
       return `Q${i+1}: [和訳→英語] 日本語「${meaning}」| 模範解答:「${word}」| 生徒の回答:「${ans}」`;
     }
@@ -2259,7 +2262,11 @@ function buildVocabScorePrompt(words, answers){
     "ルール4: 部分的に正しければ正解とする。",
     "  例）模範解答「急いで行く」→「行く」「急ぐ」→正解",
     "",
-    "ルール5: 判断に迷った場合は必ず正解（true）にする。",
+    "ルール5: 別の品詞での意味で答えた場合も正解とする。",
+    "  例）模範解答が動詞「置く」の単語でも、名詞「場所」と答えたら正解。",
+    "  その場合、adviceで「この単語は〇〇の意味もある」と他の品詞の意味を教えてあげること。",
+    "",
+    "ルール6: 判断に迷った場合は必ず正解（true）にする。",
     "  意味が通じていれば、表現が違っても正解とする。",
     "",
     "不正解にする場合（英和）:",
@@ -2927,7 +2934,7 @@ function renderVTestQ(idx){
   const body=div("vq-body");
   if(q._dir==="e2j"){
     const wordEl=div("vq-word");
-    wordEl.innerHTML=q.word+getPOSBadgeHTML(q.word,q.meaning);
+    wordEl.innerHTML=q.word+getPOSBadgeHTML(q.meaning);
     body.appendChild(wordEl);
   }else{body.appendChild(div("vq-mean",q.meaning))}
   const inp=mk("input","vq-inp");inp.placeholder=q._dir==="e2j"?"日本語の意味を入力…":"英語のスペルを入力…";inp.id="vtest-inp-"+idx;
@@ -3030,12 +3037,12 @@ function renderCard(){
   const fbm=document.getElementById("card-back-mean");
   if(A.c.dir==="e2j"||A.c.dir===""){
     if(ffs)ffs.textContent="英語";
-    if(ffw){ffw.textContent="";ffw.innerHTML=w.word+getPOSBadgeHTML(w.word,w.meaning);}
+    if(ffw){ffw.innerHTML=w.word+getPOSBadgeHTML(w.meaning);}
     if(fbs)fbs.textContent="意味";if(fbm)fbm.textContent=w.meaning;
   }else{
     if(ffs)ffs.textContent="意味";if(ffw)ffw.textContent=w.meaning;
     if(fbs)fbs.textContent="英語";
-    if(fbm){fbm.textContent="";fbm.innerHTML=w.word+getPOSBadgeHTML(w.word,w.meaning);}
+    if(fbm){fbm.innerHTML=w.word+getPOSBadgeHTML(w.meaning);}
   }
   const statusEl=document.getElementById("card-status");
   if(statusEl)statusEl.textContent=A.cardFuan.has(A.cardIdx)?"🔖 不安リストに追加済み":"";
@@ -4505,60 +4512,64 @@ function saveBasicQuiz(){
 }
 
 
+
+
+
+
 // ================================================================
-// 品詞推定（意味から判定）
+// 品詞判定（日本語の意味から全品詞を列挙）
 // ================================================================
-function guessPOS(word, meaning){
-  // 意味文字列から品詞を推定して返す（複数品詞の場合は「動詞・名詞」など）
-  const m = meaning || "";
-  const parts = [];
-  
-  // 動詞判定: 「〜する」「〜した」「〜させる」などの動詞的意味
-  const verbPatterns = /する$|した$|させる$|される$|できる$|なる$|ある$|いる$|行く|来る|見る|聞く|言う|思う|考える|使う|持つ|知る|作る|入れる|出る|取る|書く|読む|話す|教える|始める|終わる|置く|並べる|感謝する|落ちる|働く|遊ぶ|歩く|走る|泳ぐ|飛ぶ|食べる|飲む|買う|売る|送る|受ける|助ける|守る|決める|続ける|変える|起こる|起きる|寝る|休む|集める|増やす|減らす|見せる|聞かせる/;
-  const verbMeanings = m.split(",").map(s=>s.trim());
-  
-  let hasVerb = false, hasNoun = false, hasAdj = false, hasAdv = false, hasPrep = false, hasConj = false;
-  
-  verbMeanings.forEach(v => {
-    if(verbPatterns.test(v)) hasVerb = true;
-    // 名詞判定: する系以外で「〜の」「〜こと」「〜もの」がない単独名詞
-    if(!verbPatterns.test(v) && !/な$|に$|で$|へ$|と$|も$|は$|が$|を$/.test(v)){
-      // 「秋」「生命」「場所」などの名詞
-      if(/^[ぁ-んァ-ン一-龯ー]+$/.test(v) && !hasVerb) hasNoun = true;
+function detectAllPOS(meaning){
+  if(!meaning) return [];
+  const parts = new Set();
+  meaning.split(",").map(s=>s.trim()).forEach(m=>{
+    if(!m) return;
+    // 動詞
+    if(/する$|した$|させる$|される$|できる$|なる$|行く$|来る$|見る$|聞く$|言う$|思う$|考える$|使う$|持つ$|知る$|作る$|書く$|読む$|話す$|教える$|始める$|終わる$|置く$|並べる$|感謝する$|落ちる$|働く$|歩く$|走る$|食べる$|飲む$|買う$|売る$|助ける$|決める$|集める$|変える$|起きる$|休む$|会う$|待つ$|返す$|渡す$|続ける$|覚える$|忘れる$|入れる$|出す$|取る$|打つ$|引く$|押す$|叫ぶ$|泣く$|笑う$|怒る$|喜ぶ$|驚く$|困る$|急ぐ$|止まる$|動く$|増える$|減る$|消える$|現れる$|起こる$|向かう$|進む$|戻る$|帰る$|着く$|調べる$|確かめる$|比べる$|分かる$|あう$|いる$/.test(m)){
+      parts.add("動詞");
+    }
+    // 形容詞（い形・な形・のある・向きの など）
+    if((/い$/.test(m) && !/ない$|〜しない$/.test(m)) || /のある$|向きの$|らしい$|っぽい$|よい$|良い$/.test(m)){
+      parts.add("形容詞");
+    }
+    if(/な$/.test(m)){
+      parts.add("形容詞");
+    }
+    // 副詞
+    if(/たびたび$|よく$|しばしば$|実は$|まったく$|ここに$|ここで$|そのとき$|それから$|あちこちに$|もう一度$|ふたたび$|とても$|非常に$|かなり$|少し$|もっと$|最も$|一番$|たいてい$|いつも$|すぐに$|ゆっくり$|一緒に$|急いで$|静かに$|突然$|やっと$|まだ$|すでに$|ちょうど$|ほとんど$|おそらく$|きっと$|どうぞ$|どうか$|特に$|本当に$|正確に$/.test(m)){
+      parts.add("副詞");
+    }
+    // 前置詞・接続詞
+    if(/^〜|なしで$|として$|について$|のために$|によって$|のような$|にとって$/.test(m)){
+      parts.add("前置詞");
+    }
+    if(/^(しかし|そして|または|あるいは|だから|けれども|ところが|なぜなら)/.test(m)){
+      parts.add("接続詞");
+    }
+    // 名詞：動詞・形容詞・副詞・前置詞でなければ名詞
+    const isVerb=/する$|した$|させる$|される$|できる$|なる$|行く$|来る$|見る$|聞く$|言う$|思う$|考える$|使う$|持つ$|知る$|作る$|書く$|読む$|話す$|教える$|始める$|終わる$|置く$|並べる$|感謝する$|落ちる$|働く$|歩く$|走る$|食べる$|飲む$|買う$|売る$|助ける$|決める$|集める$|変える$|起きる$|休む$|会う$|待つ$|返す$|続ける$|覚える$|忘れる$|入れる$|出す$|取る$|叫ぶ$|泣く$|笑う$|怒る$|喜ぶ$|驚く$|困る$|急ぐ$|止まる$|動く$|増える$|減る$|消える$|現れる$|起こる$|向かう$|進む$|戻る$|帰る$|着く$|調べる$|確かめる$|比べる$|分かる$/.test(m);
+    const isAdj=(/い$/.test(m)&&!/ない$/.test(m))||/な$|のある$|向きの$/.test(m);
+    const isAdv=/たびたび$|よく$|しばしば$|実は$|まったく$|ここに$|ここで$|そのとき$|あちこちに$|もう一度$|ふたたび$|とても$|非常に$|かなり$|少し$|もっと$|最も$|一番$|たいてい$|いつも$|すぐに$|ゆっくり$|突然$|やっと$|まだ$|すでに$|ちょうど$|ほとんど$|どうぞ$|どうか$|特に$|本当に$/.test(m);
+    const isPrep=/^〜|なしで$|として$|について$|のために$|によって$|のような$/.test(m);
+    if(!isVerb && !isAdj && !isAdv && !isPrep){
+      parts.add("名詞");
     }
   });
-  
-  // 品詞を英単語の形から推定
-  const w = (word || "").toLowerCase();
-  // 副詞: -ly
-  if(/ly$/.test(w)) hasAdv = true;
-  // 形容詞: -al, -ous, -ful, -less, -ive, -able, -ible
-  if(/al$|ous$|ful$|less$|ive$|able$|ible$|lar$|ent$|ant$/.test(w)) hasAdj = true;
-  
-  // 意味から品詞を判定（より正確に）
-  verbMeanings.forEach(v => {
-    const vt = v.trim();
-    if(/^〜/.test(vt)) hasPrep = true; // 前置詞
-    if(/^(置く|並べる|感謝する|落ちる|使う|持つ|行く|来る|見る|言う|思う|考える|作る|書く|読む|話す|始める|終わる|働く|歩く|走る|食べる|飲む|買う|売る|助ける|決める|集める|変える|起きる|休む)/.test(vt)) hasVerb = true;
-    if(/^(秋|生命|一生|人生|生活|場所|時間|場合|方法|理由|機会|問題|答え|例|種類|部分|全体|世界|社会|家族|友達|学校|会社|国|町|村|山|川|海|空|水|火|土|風|雨|雪)/.test(vt)) hasNoun = true;
-    if(/な$/.test(vt) || /^(大きい|小さい|長い|短い|高い|低い|速い|遅い|強い|弱い|新しい|古い|若い|年老いた|良い|悪い|正しい|間違い|美しい|醜い|明るい|暗い|重い|軽い|簡単|難しい|楽しい|悲しい|嬉しい|怖い|大切|重要|有名|人気|便利|安全)/.test(vt)) hasAdj = true;
-    if(/^(たびたび|よく|しばしば|実は|まったく|ここに|ここで|そのとき|それから|あちこちに|もう一度|ふたたび|とても|非常に|かなり|少し|もっと|最も|一番)/.test(vt)) hasAdv = true;
-  });
-  
-  const labels = [];
-  if(hasVerb) labels.push("動詞");
-  if(hasNoun) labels.push("名詞");
-  if(hasAdj) labels.push("形容詞");
-  if(hasAdv) labels.push("副詞");
-  if(hasPrep) labels.push("前置詞");
-  
-  return labels.length > 1 ? labels.join("・") : (labels[0] || "");
+  // 順序を固定
+  const order=["名詞","動詞","形容詞","副詞","前置詞","接続詞"];
+  return order.filter(p=>parts.has(p));
 }
 
-function getPOSBadgeHTML(word, meaning){
-  const pos = guessPOS(word, meaning);
-  if(!pos) return "";
-  return `<span style="font-size:.7rem;font-weight:600;color:var(--acc);background:var(--accl);border:1px solid #c5d5f8;border-radius:10px;padding:.1rem .5rem;margin-left:.4rem;vertical-align:middle;letter-spacing:.03em">${pos}</span>`;
+function getPOSBadgeHTML(meaning){
+  const posList = detectAllPOS(meaning);
+  if(!posList.length) return "";
+  const label = posList.join("・");
+  return `<span style="display:inline-block;font-size:.68rem;font-weight:700;color:#1e40af;background:#e8eefb;border:1px solid #a5b4fc;border-radius:10px;padding:.1rem .55rem;margin-left:.5rem;vertical-align:middle;letter-spacing:.02em;white-space:nowrap">${label}</span>`;
+}
+
+// 採点プロンプト用: 全品詞リストを文字列で返す
+function getAllPOSStr(meaning){
+  return detectAllPOS(meaning).join("・") || "不明";
 }
 
 </script>
