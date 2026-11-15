@@ -1584,14 +1584,14 @@ input,textarea{font-family:var(--fu)}
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area">
-  <div class="sent-flash-wrap" id="sent-flash-wrap" onclick="flipSentCard()">
+  <div class="sent-flash-wrap" id="sent-flash-wrap" onclick="flipSentCard(event)">
     <div class="sent-flash-inner" id="sent-flash-inner">
-      <div class="sent-flash-front">
+      <div class="sent-flash-front" onclick="flipSentCard(event)">
         <div class="sent-flash-word" id="sent-flash-word"></div>
         <div class="sent-flash-sent" id="sent-flash-sent"></div>
         <div class="sent-flash-hint">タップして和訳を確認</div>
       </div>
-      <div class="sent-flash-back">
+      <div class="sent-flash-back" onclick="flipSentCard(event)">
         <div class="sent-flash-word" id="sent-flash-word-back"></div>
         <div class="sent-flash-ja" id="sent-flash-ja"></div>
         <div class="sent-flash-hint">もう一度タップで表に戻る</div>
