@@ -2227,27 +2227,41 @@ function buildSPrompt(ua){
 function buildVocabScorePrompt(words, answers){
   const items=words.map((w,i)=>{
     const ans=answers[i]||"";
+    const word=w.w||w.word||"";
+    const meaning=w.m||w.meaning||"";
     const dir=w._dir==="e2j"?"英語→和訳":"和訳→英語";
-    return `Q${i+1}: [${dir}] Word: "${w.word}" | Correct meaning: "${w.meaning}" | Student's answer: "${ans}"`;
+    if(dir==="英語→和訳"){
+      return `Q${i+1}: [英語→和訳・ゆるく採点] 英単語「${word}」の意味 | 模範解答:「${meaning}」| 生徒の回答:「${ans}」`;
+    }else{
+      return `Q${i+1}: [和訳→英語・厳しく採点] 日本語「${meaning}」の英語 | 模範解答:「${word}」| 生徒の回答:「${ans}」`;
+    }
   }).join("\n");
+
   return [
-    "You are an extremely lenient and generous English vocabulary test scorer for Japanese students.",
-    "CRITICAL SCORING RULES:",
-    "1. 英語→和訳 (English to Japanese):",
-    "   - Mark CORRECT (true) for ANY reasonable Japanese translation, synonym, or similar nuance (e.g., if the correct meaning is '提案する', answers like '提唱する', '勧める', '意見を出す' are all CORRECT; if 'を見なす' or '熟考する', answers like '熟コウスル', '考える', '見なす' are all CORRECT).",
-    "   - Ignore minor differences in conjugation, polite forms (desu/masu), kanji vs katakana/hiragana, or slight typos as long as the core meaning is understood.",
-    "2. 和訳→英語 (Japanese to English):",
-    "   - Mark CORRECT (true) if the spelling is close, or if it's a valid variant (plural/singular, tense, or standard synonym).",
-    "3. OVERRIDE RULE: When in doubt, ALWAYS mark correct (true). Only mark false if the answer is completely blank, gibberish, or has a totally unrelated/opposite meaning.",
+    "あなたは日本の中高生向け英単語テストの採点者です。",
+    "問題の種類によって採点基準が異なります：",
+    "",
+    "【英語→和訳（ゆるく採点）】",
+    "・意味・ニュアンスが同じか近ければ正解（類義語・同義語はすべて正解）",
+    "・漢字・ひらがな・カタカナの表記違いは正解",
+    "・敬体・常体（します／する）の違いは正解",
+    "・「〜する」「〜すること」など語尾の微細な差は正解",
+    "・迷った場合は必ず正解（true）にする",
+    "",
+    "【和訳→英語（厳しく採点）】",
+    "・正しいスペルで模範解答と同じ単語を書けた場合のみ正解",
+    "・スペルミスは一切不正解（1文字でも違えば不正解）",
+    "・品詞が違う場合は不正解（例：名詞を求めているのに動詞を書いた）",
+    "・ただし複数形・三単現など活用形の違いは許容する",
+    "・類義語は原則不正解（模範解答の単語そのものを答えるべき）",
+    "",
+    "【共通】",
+    "・完全に空欄は不正解",
+    "・意味が全く違う（反意語・無関係な語）は不正解",
     "",
     items,
     "",
-    "For EACH question, provide:",
-    "  - correct: true/false",
-    "  - note: 1-2 sentences in Japanese explaining why correct/incorrect",
-    "  - advice: 1 sentence in Japanese with a helpful tip or memory trick (even for correct answers)",
-    "",
-    'Output ONLY a JSON object: {"results":[{"q":1,"correct":true,"note":"理由（日本語）","advice":"アドバイス（日本語）"},...]}',
+    'JSONのみ出力: {"results":[{"q":1,"correct":true,"note":"一言コメント（日本語）","advice":"覚え方のコツ（日本語1文）"},...]}',
   ].join("\n");
 }
 
