@@ -324,7 +324,9 @@ input,textarea{font-family:var(--fu)}
 .flash-inner.flipped{transform:rotateY(180deg)}
 .flash-front,.flash-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--rl);box-shadow:var(--shm);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;gap:.5rem}
 .flash-front{background:#fff;border:2px solid var(--rule)}
-.flash-back{background:var(--accl);border:2px solid var(--acc);transform:rotateY(180deg)}
+.flash-back{background:var(--accl);border:2px solid var(--acc);transform:rotateY(180deg);pointer-events:none}
+.flash-inner.flipped .flash-back{pointer-events:auto}
+.flash-inner.flipped .flash-front{pointer-events:none}
 .flash-word{font-size:2rem;font-weight:800;color:var(--ink);font-family:var(--fe)}
 .flash-mean{font-size:1.5rem;font-weight:700;color:var(--acc)}
 .flash-side{font-size:.78rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em}
@@ -2240,7 +2242,12 @@ function buildVocabScorePrompt(words, answers){
     "",
     items,
     "",
-    'Output ONLY a JSON object: {"results":[{"q":1,"correct":true,"note":"brief reason in Japanese"},...]}',
+    "For EACH question, provide:",
+    "  - correct: true/false",
+    "  - note: 1-2 sentences in Japanese explaining why correct/incorrect",
+    "  - advice: 1 sentence in Japanese with a helpful tip or memory trick (even for correct answers)",
+    "",
+    'Output ONLY a JSON object: {"results":[{"q":1,"correct":true,"note":"理由（日本語）","advice":"アドバイス（日本語）"},...]}',
   ].join("\n");
 }
 
@@ -2929,9 +2936,17 @@ function renderVResult(cor,total,wrongWords){
     const hd=div("q-result-hd "+(r.correct?"ok-h":"ng-h"),`問 ${i+1}　${w._dir==="e2j"?"英→和":"和→英"}`);
     const badge=mk("span","vbadge");badge.textContent=r.correct?"✓ 正解":"✗ 不正解";hd.appendChild(badge);card.appendChild(hd);
     const body=div("q-result-body");
-    if(w._dir==="e2j"){body.appendChild(div("q-txt",`"${w.word}" の意味は？`));body.appendChild(div(null,`あなたの回答: ${ans}`));body.appendChild(div(null,`正解: ${w.meaning}`))}
-    else{body.appendChild(div("q-txt",`「${w.meaning}」の英語は？`));body.appendChild(div(null,`あなたの回答: ${ans}`));body.appendChild(div(null,`正解: ${w.word}`))}
-    if(r.note)body.appendChild(div("ex-why",r.note));
+    if(w._dir==="e2j"){
+      body.appendChild(div("q-txt",`"${w.word}" の意味は？`));
+      const yourDiv=div(null);yourDiv.innerHTML=`あなたの回答: <strong style="color:${r.correct?"var(--ok)":"var(--ng)"}">${ans}</strong>`;body.appendChild(yourDiv);
+      const corrDiv=div(null);corrDiv.innerHTML=`模範解答: <strong style="color:var(--ok)">${w.meaning}</strong>`;body.appendChild(corrDiv);
+    }else{
+      body.appendChild(div("q-txt",`「${w.meaning}」の英語は？`));
+      const yourDiv=div(null);yourDiv.innerHTML=`あなたの回答: <strong style="color:${r.correct?"var(--ok)":"var(--ng)"}">${ans}</strong>`;body.appendChild(yourDiv);
+      const corrDiv=div(null);corrDiv.innerHTML=`模範解答: <strong style="color:var(--ok)">${w.word}</strong>`;body.appendChild(corrDiv);
+    }
+    if(r.note){const nd=div("ex-why");nd.innerHTML=`💬 ${r.note}`;body.appendChild(nd);}
+    if(r.advice){const ad=div();ad.style.cssText="font-size:.82rem;color:var(--acc);background:var(--accl);border-radius:var(--r);padding:.4rem .75rem;margin-top:.35rem;border-left:3px solid var(--acc)";ad.innerHTML=`💡 ${r.advice}`;body.appendChild(ad);}
     card.appendChild(body);cards.appendChild(card);
   });
   $("btn-vredo").style.display=wrongWords.length?"":"none";
