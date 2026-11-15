@@ -1474,7 +1474,7 @@ input,textarea{font-family:var(--fu)}
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area">
-  <div class="flash-card" id="flash-card">
+  <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button')){var fi=document.getElementById('flash-inner');if(fi)fi.classList.toggle('flipped')}">
     <div class="flash-inner" id="flash-inner">
       <div class="flash-front">
         <div class="flash-side" id="card-front-side">表</div>
@@ -3055,25 +3055,7 @@ function flipCard(){
   const fi=document.getElementById("flash-inner");if(fi)fi.classList.toggle("flipped");
 }
 // flash-card クリックでflip（ボタン以外）
-document.addEventListener("DOMContentLoaded",()=>{
-  // flash-card クリック（ボタン以外）でflip
-  const fc=document.getElementById("flash-card");
-  if(fc){
-    fc.addEventListener("click",(e)=>{
-      if(e.target.closest("button"))return;
-      flipCard();
-    });
-  }
-  const wfc=document.getElementById("weak-flash-card");
-  if(wfc){
-    wfc.addEventListener("click",(e)=>{
-      if(e.target.closest("button"))return;
-      flipWeakCard();
-    });
-  }
-  // カードボタンのイベント設定
-  setupCardButtons();
-});
+// flash-card click handled by inline onclick
 
 function setupCardButtons(){/* no-op: buttons use onclick attributes */}
 function prevCard(){
@@ -3118,7 +3100,7 @@ function restartFuanCard(){
   A.cardIdx=0;A.cardFuan=new Set();
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card">
+    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button')){var fi=document.getElementById('flash-inner');if(fi)fi.classList.toggle('flipped')}">
       <div class="flash-inner" id="flash-inner">
         <div class="flash-front">
           <div class="flash-side" id="card-front-side">表</div>
@@ -3152,7 +3134,7 @@ function restartCard(){
   // card-areaを再構築
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card">
+    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button')){var fi=document.getElementById('flash-inner');if(fi)fi.classList.toggle('flipped')}">
       <div class="flash-inner" id="flash-inner">
         <div class="flash-front">
           <div class="flash-side" id="card-front-side">表</div>
@@ -4516,47 +4498,88 @@ function saveBasicQuiz(){
 
 
 
+
+
 // ================================================================
-// 品詞判定（日本語の意味から全品詞を列挙）
+// 品詞判定（英文法8品詞基準・日本語の意味から全品詞を列挙）
+// 名詞／代名詞／動詞／形容詞／副詞／前置詞／接続詞／間投詞
 // ================================================================
 function detectAllPOS(meaning){
   if(!meaning) return [];
   const parts = new Set();
-  meaning.split(",").map(s=>s.trim()).forEach(m=>{
-    if(!m) return;
-    // 動詞
-    if(/する$|した$|させる$|される$|できる$|なる$|行く$|来る$|見る$|聞く$|言う$|思う$|考える$|使う$|持つ$|知る$|作る$|書く$|読む$|話す$|教える$|始める$|終わる$|置く$|並べる$|感謝する$|落ちる$|働く$|歩く$|走る$|食べる$|飲む$|買う$|売る$|助ける$|決める$|集める$|変える$|起きる$|休む$|会う$|待つ$|返す$|渡す$|続ける$|覚える$|忘れる$|入れる$|出す$|取る$|打つ$|引く$|押す$|叫ぶ$|泣く$|笑う$|怒る$|喜ぶ$|驚く$|困る$|急ぐ$|止まる$|動く$|増える$|減る$|消える$|現れる$|起こる$|向かう$|進む$|戻る$|帰る$|着く$|調べる$|確かめる$|比べる$|分かる$|あう$|いる$/.test(m)){
+  const entries = meaning.split(",").map(s=>s.trim()).filter(Boolean);
+
+  entries.forEach(m=>{
+    // ── 動詞（Verb）──────────────────────────────
+    // 「〜する」「〜た」系の動詞語尾
+    if(/する$|した$|させる$|される$|できる$|なる$|あう$|行く$|来る$|見る$|聞く$|言う$|思う$|考える$|使う$|持つ$|知る$|作る$|書く$|読む$|話す$|教える$|始める$|終わる$|置く$|並べる$|感謝する$|落ちる$|働く$|歩く$|走る$|食べる$|飲む$|買う$|売る$|助ける$|決める$|集める$|変える$|起きる$|休む$|会う$|待つ$|返す$|渡す$|続ける$|覚える$|忘れる$|入れる$|出す$|取る$|打つ$|引く$|押す$|叫ぶ$|泣く$|笑う$|怒る$|喜ぶ$|驚く$|困る$|急ぐ$|止まる$|動く$|増える$|減る$|消える$|現れる$|起こる$|向かう$|進む$|戻る$|帰る$|着く$|調べる$|確かめる$|比べる$|分かる$|いる$|ある$|指す$|属する$|依頼する$|命令する$|要求する$|許可する$|提案する$|決定する$|判断する$|行動する$|反応する$|存在する$|関係する$/.test(m)){
       parts.add("動詞");
     }
-    // 形容詞（い形・な形・のある・向きの など）
-    if((/い$/.test(m) && !/ない$|〜しない$/.test(m)) || /のある$|向きの$|らしい$|っぽい$|よい$|良い$/.test(m)){
+
+    // ── 形容詞（Adjective）──────────────────────
+    // 〜い形容詞（大きい・美しい など）
+    if(/[^なし]い$/.test(m) && !/ない$|〜しない$|したい$|してほしい$/.test(m)){
       parts.add("形容詞");
     }
-    if(/な$/.test(m)){
+    // な形容詞（〜な・〜的な など）
+    if(/[^いう]な$/.test(m)){
       parts.add("形容詞");
     }
-    // 副詞
-    if(/たびたび$|よく$|しばしば$|実は$|まったく$|ここに$|ここで$|そのとき$|それから$|あちこちに$|もう一度$|ふたたび$|とても$|非常に$|かなり$|少し$|もっと$|最も$|一番$|たいてい$|いつも$|すぐに$|ゆっくり$|一緒に$|急いで$|静かに$|突然$|やっと$|まだ$|すでに$|ちょうど$|ほとんど$|おそらく$|きっと$|どうぞ$|どうか$|特に$|本当に$|正確に$/.test(m)){
+    // 〜のある・〜向きの・〜的・〜らしい・〜の（連体修飾）
+    if(/のある$|向きの$|らしい$|っぽい$|よい$|良い$|的$/.test(m)){
+      parts.add("形容詞");
+    }
+    // 「ほかの」「様々な」「主な」など「〜の」で終わる連体詞的形容詞
+    if(/[^てにをはがもでとからより]の$/.test(m) && m.length >= 3){
+      parts.add("形容詞");
+    }
+
+    // ── 副詞（Adverb）───────────────────────────
+    if(/に$|で$/.test(m) && !/^〜|なしで$|として$|について$|のために$|によって$/.test(m) && parts.size===0){
+      // 「〜に」「〜で」で始まる副詞的表現（他に品詞がつかない場合）
       parts.add("副詞");
     }
-    // 前置詞・接続詞
-    if(/^〜|なしで$|として$|について$|のために$|によって$|のような$|にとって$/.test(m)){
+    if(/たびたび|よく|しばしば|実は|まったく|ここに|ここで|そのとき|それから|あちこちに|もう一度|ふたたび|とても|非常に|かなり|少し|もっと|最も|一番|たいてい|いつも|決して|けっして|すぐに|ゆっくり|一緒に|急いで|静かに|丁寧に|注意深く|突然|やっと|まだ|もはや|すでに|ちょうど|ほとんど|おそらく|きっと|どうぞ|どうか|例えば|特に|実際に|本当に|正確に|再び|再度|常に|時々|めったに|必ず|完全に|単に|ただ/.test(m)){
+      parts.add("副詞");
+    }
+
+    // ── 前置詞（Preposition）────────────────────
+    if((/^〜/.test(m) || /なしで$|として$|について$|のために$|によって$|のような$|にとって$|に関して$|を通じて$|に沿って$|の間に$|の前に$|の後ろに$|の中に$|の上に$|の下に$|のそばに$/.test(m)) && !/しないで$/.test(m)){
       parts.add("前置詞");
     }
-    if(/^(しかし|そして|または|あるいは|だから|けれども|ところが|なぜなら)/.test(m)){
+
+    // ── 接続詞（Conjunction）────────────────────
+    if(/^(しかし|そして|または|あるいは|だから|けれども|ところが|なぜなら|〜なら|〜ければ|〜ので|〜のに|〜ながら|〜ために|〜とき|〜たら|〜ても|〜でも)/.test(m)){
       parts.add("接続詞");
     }
-    // 名詞：動詞・形容詞・副詞・前置詞でなければ名詞
-    const isVerb=/する$|した$|させる$|される$|できる$|なる$|行く$|来る$|見る$|聞く$|言う$|思う$|考える$|使う$|持つ$|知る$|作る$|書く$|読む$|話す$|教える$|始める$|終わる$|置く$|並べる$|感謝する$|落ちる$|働く$|歩く$|走る$|食べる$|飲む$|買う$|売る$|助ける$|決める$|集める$|変える$|起きる$|休む$|会う$|待つ$|返す$|続ける$|覚える$|忘れる$|入れる$|出す$|取る$|叫ぶ$|泣く$|笑う$|怒る$|喜ぶ$|驚く$|困る$|急ぐ$|止まる$|動く$|増える$|減る$|消える$|現れる$|起こる$|向かう$|進む$|戻る$|帰る$|着く$|調べる$|確かめる$|比べる$|分かる$/.test(m);
-    const isAdj=(/い$/.test(m)&&!/ない$/.test(m))||/な$|のある$|向きの$/.test(m);
-    const isAdv=/たびたび$|よく$|しばしば$|実は$|まったく$|ここに$|ここで$|そのとき$|あちこちに$|もう一度$|ふたたび$|とても$|非常に$|かなり$|少し$|もっと$|最も$|一番$|たいてい$|いつも$|すぐに$|ゆっくり$|突然$|やっと$|まだ$|すでに$|ちょうど$|ほとんど$|どうぞ$|どうか$|特に$|本当に$/.test(m);
+
+    // ── 代名詞（Pronoun）────────────────────────
+    if(/^(私|あなた|彼|彼女|それ|これ|あれ|私たち|あなたたち|彼ら|彼女ら|それら|誰|何|どれ|どこ|自分自身|お互い)$/.test(m)){
+      parts.add("代名詞");
+    }
+
+    // ── 間投詞（Interjection）───────────────────
+    if(/^(ああ|おお|わあ|えっ|あら|よし|さあ|ほら|おい|やあ|こんにちは|さようなら|ありがとう|すみません|はい|いいえ)/.test(m)){
+      parts.add("間投詞");
+    }
+  });
+
+  // 名詞（Noun）: 動詞・形容詞・副詞・前置詞・接続詞・代名詞・間投詞のいずれでもない意味が含まれる場合
+  entries.forEach(m=>{
+    const isVerb=/する$|した$|させる$|される$|できる$|なる$|行く$|来る$|見る$|聞く$|言う$|思う$|考える$|使う$|持つ$|知る$|作る$|書く$|読む$|話す$|教える$|始める$|終わる$|置く$|並べる$|感謝する$|落ちる$|働く$|歩く$|走る$|食べる$|飲む$|買う$|売る$|助ける$|決める$|集める$|変える$|起きる$|休む$|会う$|待つ$|返す$|渡す$|続ける$|覚える$|忘れる$|入れる$|出す$|取る$|打つ$|引く$|押す$|叫ぶ$|泣く$|笑う$|怒る$|喜ぶ$|驚く$|困る$|急ぐ$|止まる$|動く$|増える$|減る$|消える$|現れる$|起こる$|向かう$|進む$|戻る$|帰る$|着く$|調べる$|確かめる$|比べる$|分かる$|いる$|ある$/.test(m);
+    const isAdj=(/[^なし]い$/.test(m)&&!/ない$/.test(m))||/[^いう]な$|のある$|向きの$|らしい$|っぽい$|良い$|的$/.test(m);
+    const isAdv=/たびたび|よく|しばしば|実は|まったく|ここに|ここで|そのとき|あちこちに|もう一度|ふたたび|とても|非常に|かなり|少し|もっと|最も|一番|たいてい|いつも|決して|けっして|すぐに|ゆっくり|突然|やっと|まだ|すでに|ちょうど|ほとんど|どうぞ|どうか|特に|本当に/.test(m);
     const isPrep=/^〜|なしで$|として$|について$|のために$|によって$|のような$/.test(m);
-    if(!isVerb && !isAdj && !isAdv && !isPrep){
+    const isConj=/^(しかし|そして|または|あるいは|だから|けれども|ところが|なぜなら)/.test(m);
+    const isPron=/^(私|あなた|彼|彼女|それ|これ|あれ|私たち|あなたたち|彼ら|彼女ら|それら|誰|何|どれ|どこ)$/.test(m);
+    const isInterj=/^(ああ|おお|わあ|えっ|あら|よし|さあ|ほら|おい|やあ)/.test(m);
+    if(!isVerb && !isAdj && !isAdv && !isPrep && !isConj && !isPron && !isInterj){
       parts.add("名詞");
     }
   });
-  // 順序を固定
-  const order=["名詞","動詞","形容詞","副詞","前置詞","接続詞"];
+
+  // 表示順序（伝統的な8品詞順）
+  const order=["名詞","代名詞","動詞","形容詞","副詞","前置詞","接続詞","間投詞"];
   return order.filter(p=>parts.has(p));
 }
 
@@ -4567,9 +4590,8 @@ function getPOSBadgeHTML(meaning){
   return `<span style="display:inline-block;font-size:.68rem;font-weight:700;color:#1e40af;background:#e8eefb;border:1px solid #a5b4fc;border-radius:10px;padding:.1rem .55rem;margin-left:.5rem;vertical-align:middle;letter-spacing:.02em;white-space:nowrap">${label}</span>`;
 }
 
-// 採点プロンプト用: 全品詞リストを文字列で返す
 function getAllPOSStr(meaning){
-  return detectAllPOS(meaning).join("・") || "不明";
+  return detectAllPOS(meaning).join("・") || "";
 }
 
 </script>
