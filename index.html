@@ -3200,75 +3200,6 @@ $("btn-sent-new").onclick=async()=>{
   catch(e){go("s-sent");alert("エラー: "+e.message)}
 };
 
-function renderSent(){
-  const list=$("sent-word-list");list.innerHTML="";
-  const sentences=A.sentData?.sentences||[];
-  sentences.forEach((s,i)=>{
-    if(!s||!s.sentence)return;
-    const word=s.word||"";
-    const w=A.sentWords.find(x=>(x.word||x.w||"")===word);
-    const meaning=w?.meaning||w?.m||"";
-    const card=mk("div","vocab-q-card");
-    const hd=div("vq-hd",word+(meaning?" （"+meaning+"）":""));
-    card.appendChild(hd);
-    const body=div("vq-body");
-    // 例文（タップで和訳トグル、対象単語を長押しで意味表示）
-    const sentEl=mk("div","ex-sent");
-    sentEl.style.cursor="pointer";
-    if(word){
-      // 単語を安全に分割
-      try{
-        const escaped=word.replace(/[-.*+?^${}()|[\]\\]/g,"\\$&");
-        const regex=new RegExp("("+escaped+")","gi");
-        const parts=s.sentence.split(regex);
-        parts.forEach(p=>{
-          if(!p)return;
-          if(word&&p.toLowerCase()===word.toLowerCase()){
-            const sp=mk("span","ex-word-span",p);
-            const handleReveal=()=>{sp.classList.toggle("revealed");showWordTooltip(sp,word+" = "+meaning)};
-            sp.addEventListener("dblclick",handleReveal);
-            let lp;sp.addEventListener("touchstart",()=>{lp=setTimeout(handleReveal,600)},{passive:true});
-            sp.addEventListener("touchend",()=>clearTimeout(lp));
-            sentEl.appendChild(sp);
-          }else{
-            sentEl.appendChild(document.createTextNode(p));
-          }
-        });
-      }catch(e){
-        sentEl.textContent=s.sentence;
-      }
-    }else{
-      sentEl.textContent=s.sentence||"";
-    }
-    body.appendChild(sentEl);
-    // 日本語訳: タップで表示/非表示
-    if(s.sentenceJa){
-      const jaWrap=mk("div","sent-ja-wrap");
-      jaWrap.style.cssText="margin-top:.6rem;cursor:pointer;user-select:none;";
-      const jaBtn=mk("div","sent-ja-btn");
-      jaBtn.style.cssText="display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;color:var(--acc);font-weight:600;padding:.3rem .7rem;border-radius:30px;background:var(--accl);border:1px solid #c5d5f8;";
-      jaBtn.innerHTML="🔍 和訳を表示";
-      const jaText=mk("div","sent-ja-text");
-      jaText.style.cssText="font-size:.82rem;color:var(--ink2);margin-top:.4rem;display:none;line-height:1.65;padding:.4rem .6rem;background:var(--surf);border-radius:var(--r);border:1px solid var(--rule);";
-      jaText.textContent=s.sentenceJa;
-      let jaOpen=false;
-      const toggleJa=()=>{
-        jaOpen=!jaOpen;
-        jaText.style.display=jaOpen?"block":"none";
-        jaBtn.innerHTML=jaOpen?"🔼 和訳を隠す":"🔍 和訳を表示";
-      };
-      jaWrap.onclick=toggleJa;
-      sentEl._toggleJa=toggleJa;
-      jaWrap.append(jaBtn,jaText);body.appendChild(jaWrap);
-    }
-    const acts=div();acts.style.cssText="display:flex;gap:.5rem;margin-top:.75rem";
-    const oBtn=mk("button","btn-oboeta");oBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";oBtn.textContent="覚えた！";
-    const fBtn=mk("button","btn-fuan");fBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";fBtn.textContent="不安…";
-    fBtn.onclick=()=>{addWeakWord({n:w?.n||0,word:word,meaning:meaning});showToast("⚠️ 苦手リストに追加しました")};
-    acts.append(oBtn,fBtn);body.appendChild(acts);
-    card.appendChild(body);list.appendChild(card);
-  });
-}
 
 // ================================================================
 // TOAST & CONFETTI & UTILS
@@ -4401,7 +4332,6 @@ function sentFuan(){
 }
 
 // renderSentCard を呼ぶように renderSent を上書き
-const _origRenderSent=typeof renderSent!=="undefined"?renderSent:null;
 function renderSent(){
   A.sentCardIdx=0;
   renderSentCard();
