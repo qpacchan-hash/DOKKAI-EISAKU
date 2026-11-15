@@ -525,7 +525,9 @@ input,textarea{font-family:var(--fu)}
   padding:1.5rem;text-align:center;gap:.75rem;min-height:200px;
 }
 .sent-flash-front{background:#fff;border:2px solid var(--rule)}
-.sent-flash-back{background:var(--accl);border:2px solid #a5b4fc;transform:rotateY(180deg)}
+.sent-flash-back{background:var(--accl);border:2px solid #a5b4fc;transform:rotateY(180deg);pointer-events:none}
+.sent-flash-inner.flipped .sent-flash-back{pointer-events:auto}
+.sent-flash-inner.flipped .sent-flash-front{pointer-events:none}
 .sent-flash-hint{font-size:.75rem;color:var(--ink3);margin-top:.5rem}
 .sent-flash-word{font-size:1.1rem;font-weight:700;color:var(--acc)}
 .sent-flash-sent{font-size:1rem;line-height:1.75;color:var(--ink)}
@@ -3483,6 +3485,14 @@ document.addEventListener("DOMContentLoaded",()=>{
     wfc.addEventListener("click",(e)=>{
       if(e.target.closest("button"))return;
       flipWeakCard();
+    });
+  }
+  // 基本例文カードのクリックリスナー
+  const bfw=document.getElementById("basic-flash-wrap");
+  if(bfw){
+    bfw.addEventListener("click",(e)=>{
+      if(e.target.closest("button"))return;
+      flipBasicCard(e);
     });
   }
   setupCardButtons();
