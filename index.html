@@ -2221,18 +2221,18 @@ function buildVocabScorePrompt(words, answers){
   const items=words.map((w,i)=>{
     const ans=answers[i]||"";
     const dir=w._dir==="e2j"?"英語→和訳":"和訳→英語";
-    return `Q${i+1}: [${dir}] Word: "${w.word}" | Meaning: "${w.meaning}" | Student's answer: "${ans}"`;
+    return `Q${i+1}: [${dir}] Word: "${w.word}" | Correct meaning: "${w.meaning}" | Student's answer: "${ans}"`;
   }).join("\n");
   return [
-    "You are an English vocabulary test scorer for Japanese students.",
-    "Score each answer:",
-    "- For 英語→和訳 (English to Japanese): Accept if the nuance/meaning is correct. Minor paraphrase is OK.",
-    "- For 和訳→英語 (Japanese to English): Must be the exact word or an accepted spelling variant. Partial credit not given.",
+    "You are a lenient English vocabulary test scorer for Japanese students.",
+    "Scoring criteria:",
+    "- 英語→和訳 (English to Japanese meaning): Mark CORRECT if the student's answer captures the main meaning or nuance, even if phrased differently. Synonyms and partial answers are OK.",
+    "- 和訳→英語 (Japanese to English word): Mark CORRECT if the student wrote the correct English word (accept minor spelling mistakes, different forms like plural/past tense, or close synonyms that have the same meaning).",
+    "- Be generous: if the student clearly understands the word, mark it correct.",
     "",
     items,
     "",
-    "Output ONLY a JSON object:",
-    JSON.stringify({results:words.map((_,i)=>({q:i+1,correct:true,note:""}))})
+    'Output ONLY a JSON object: {"results":[{"q":1,"correct":true,"note":"brief reason in Japanese"},...]}',
   ].join("\n");
 }
 
@@ -3162,8 +3162,9 @@ function renderSent(){
     const hd=div("vq-hd",word+(meaning?" （"+meaning+"）":""));
     card.appendChild(hd);
     const body=div("vq-body");
-    // 例文（対象単語を長押しで意味表示）
+    // 例文（タップで和訳トグル、対象単語を長押しで意味表示）
     const sentEl=mk("div","ex-sent");
+    sentEl.style.cursor="pointer";
     if(word){
       // 単語を安全に分割
       try{
@@ -3190,7 +3191,26 @@ function renderSent(){
       sentEl.textContent=s.sentence||"";
     }
     body.appendChild(sentEl);
-    if(s.sentenceJa){const ja=div();ja.style.cssText="font-size:.82rem;color:var(--ink2);margin-top:.5rem";ja.textContent=s.sentenceJa;body.appendChild(ja)}
+    // 日本語訳: タップで表示/非表示
+    if(s.sentenceJa){
+      const jaWrap=mk("div","sent-ja-wrap");
+      jaWrap.style.cssText="margin-top:.6rem;cursor:pointer;user-select:none;";
+      const jaBtn=mk("div","sent-ja-btn");
+      jaBtn.style.cssText="display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;color:var(--acc);font-weight:600;padding:.3rem .7rem;border-radius:30px;background:var(--accl);border:1px solid #c5d5f8;";
+      jaBtn.innerHTML="🔍 和訳を表示";
+      const jaText=mk("div","sent-ja-text");
+      jaText.style.cssText="font-size:.82rem;color:var(--ink2);margin-top:.4rem;display:none;line-height:1.65;padding:.4rem .6rem;background:var(--surf);border-radius:var(--r);border:1px solid var(--rule);";
+      jaText.textContent=s.sentenceJa;
+      let jaOpen=false;
+      const toggleJa=()=>{
+        jaOpen=!jaOpen;
+        jaText.style.display=jaOpen?"block":"none";
+        jaBtn.innerHTML=jaOpen?"🔼 和訳を隠す":"🔍 和訳を表示";
+      };
+      jaWrap.onclick=toggleJa;
+      sentEl._toggleJa=toggleJa;
+      jaWrap.append(jaBtn,jaText);body.appendChild(jaWrap);
+    }
     const acts=div();acts.style.cssText="display:flex;gap:.5rem;margin-top:.75rem";
     const oBtn=mk("button","btn-oboeta");oBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";oBtn.textContent="覚えた！";
     const fBtn=mk("button","btn-fuan");fBtn.style.cssText="font-size:.82rem;padding:.4rem .85rem";fBtn.textContent="不安…";
