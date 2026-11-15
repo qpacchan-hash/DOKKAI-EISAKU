@@ -513,6 +513,33 @@ input,textarea{font-family:var(--fu)}
   font-size:1.1rem;color:var(--ink3);padding:.1rem .3rem;
 }
 .ai-bar-close:hover{color:var(--ng)}
+
+/* ── 例文フラッシュカード ── */
+.sent-flash-wrap{width:100%;max-width:520px;margin:0 auto;perspective:1000px;cursor:pointer;min-height:200px}
+.sent-flash-inner{position:relative;width:100%;min-height:200px;transition:transform .45s;transform-style:preserve-3d}
+.sent-flash-inner.flipped{transform:rotateY(180deg)}
+.sent-flash-front,.sent-flash-back{
+  position:absolute;inset:0;backface-visibility:hidden;
+  border-radius:var(--rl);box-shadow:var(--shm);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:1.5rem;text-align:center;gap:.75rem;min-height:200px;
+}
+.sent-flash-front{background:#fff;border:2px solid var(--rule)}
+.sent-flash-back{background:var(--accl);border:2px solid #a5b4fc;transform:rotateY(180deg)}
+.sent-flash-hint{font-size:.75rem;color:var(--ink3);margin-top:.5rem}
+.sent-flash-word{font-size:1.1rem;font-weight:700;color:var(--acc)}
+.sent-flash-sent{font-size:1rem;line-height:1.75;color:var(--ink)}
+.sent-flash-sent .ex-word-span{color:var(--ok);font-weight:700;text-decoration:underline dotted}
+.sent-flash-ja{font-size:.88rem;color:var(--ink2);line-height:1.65}
+.sent-flash-nav{display:flex;align-items:center;gap:1rem;justify-content:center;margin-top:.5rem}
+.sent-prog{font-size:.85rem;color:var(--ink3);min-width:60px;text-align:center}
+/* 苦手例文リスト */
+.weak-sent-row{display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.weak-sent-word{font-weight:700;color:var(--acc);font-size:.9rem;min-width:80px}
+.weak-sent-sent{font-size:.87rem;color:var(--ink);flex:1;line-height:1.6}
+.weak-sent-ja{font-size:.8rem;color:var(--ink2);width:100%;margin-top:.2rem}
+.weak-sent-del{font-size:.75rem;color:var(--ng);cursor:pointer;padding:.2rem .5rem;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.weak-sent-del:hover{background:var(--ng);color:#fff}
 </style>
 </head>
 <body>
@@ -1458,6 +1485,7 @@ input,textarea{font-family:var(--fu)}
     <button class="chip wide" id="btn-anki-card" style="padding:.85rem;font-size:.95rem">🃏 単語カード<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">タップで裏返し・覚えた！/不安…</span></button>
     <button class="chip wide" id="btn-anki-sent" style="padding:.85rem;font-size:.95rem">📖 単語例文<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">AI生成の例文で文脈を確認</span></button>
     <button class="chip wide" id="btn-anki-weak" style="padding:.85rem;font-size:.95rem">⚠️ 苦手単語リスト<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">間違えた・不安な単語を管理</span></button>
+    <button class="chip wide" id="btn-anki-weak-sent" style="padding:.85rem;font-size:.95rem">📝 苦手基本例文<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">不安…を押した例文を管理</span></button>
   </div>
 </div>
 </div>
@@ -1555,13 +1583,33 @@ input,textarea{font-family:var(--fu)}
   <span style="font-weight:700;font-size:.85rem">📖 単語例文</span>
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
-<div style="max-width:820px;margin:0 auto;padding:1.5rem 1.25rem 3rem;display:flex;flex-direction:column;gap:1.25rem">
-  <div style="font-size:.85rem;color:var(--ink2);background:var(--accl);border-radius:var(--r);padding:.75rem 1rem;border:1px solid #c5d5f8;line-height:1.6">
-    💡 <strong>単語をダブルクリック</strong>（スマホは長押し）すると意味が表示されます。覚えた！/不安…で苦手リストに追加できます。
+<div class="card-area">
+  <div class="sent-flash-wrap" id="sent-flash-wrap" onclick="flipSentCard()">
+    <div class="sent-flash-inner" id="sent-flash-inner">
+      <div class="sent-flash-front">
+        <div class="sent-flash-word" id="sent-flash-word"></div>
+        <div class="sent-flash-sent" id="sent-flash-sent"></div>
+        <div class="sent-flash-hint">タップして和訳を確認</div>
+      </div>
+      <div class="sent-flash-back">
+        <div class="sent-flash-word" id="sent-flash-word-back"></div>
+        <div class="sent-flash-ja" id="sent-flash-ja"></div>
+        <div class="sent-flash-hint">もう一度タップで表に戻る</div>
+      </div>
+    </div>
   </div>
-  <div id="sent-word-list"></div>
-  <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-    <button class="chip" id="btn-sent-new">新しい例文を生成</button>
+  <div class="sent-flash-nav">
+    <button class="chip" id="sent-prev" onclick="prevSentCard()">◀ 前へ</button>
+    <span class="sent-prog" id="sent-prog"></span>
+    <button class="chip" id="sent-next" onclick="nextSentCard()">次へ ▶</button>
+  </div>
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+    <button class="btn-oboeta" id="sent-oboeta" onclick="sentOboeta()" style="font-size:.9rem;padding:.55rem 1.4rem">覚えた！ ✓</button>
+    <button class="btn-fuan" id="sent-fuan" onclick="sentFuan()" style="font-size:.9rem;padding:.55rem 1.4rem">不安… △</button>
+  </div>
+  <div style="font-size:.82rem;color:var(--ink3);text-align:center" id="sent-status"></div>
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem">
+    <button class="chip" id="btn-sent-new">🔄 新しい例文を生成</button>
     <button class="chip red" onclick="go('s-top')">終了</button>
   </div>
 </div>
@@ -1904,6 +1952,8 @@ $("btn-anki-sent").onclick=()=>{
   go("s-sent-set");
 };
 $("btn-anki-weak").onclick=()=>{renderWeakList();go("s-weak")};
+$("btn-anki-weak-sent").onclick=()=>{renderWeakSentList();go("s-weak-sent")};
+$("btn-weak-sent-clear").onclick=()=>{if(confirm("苦手例文を全て削除しますか？")){setWeakSents([]);renderWeakSentList();showToast("削除しました")}};
 $("btn-weak-card").onclick=()=>{startWeakCard()};
 
 // ================================================================
@@ -3684,6 +3734,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 
+
 // ================================================================
 // 基本例文データ ＆ ロジック
 // ================================================================
@@ -4233,6 +4284,129 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+
+// ================================================================
+// 苦手基本例文リスト
+// ================================================================
+function getWeakSents(){try{return JSON.parse(localStorage.getItem("weak_sents_v4")||"[]")}catch{return[]}}
+function setWeakSents(arr){try{localStorage.setItem("weak_sents_v4",JSON.stringify(arr))}catch{}}
+function addWeakSent(sent){
+  const list=getWeakSents();
+  if(!list.find(x=>x.sentence===sent.sentence)){
+    list.push({word:sent.word||"",sentence:sent.sentence||"",sentenceJa:sent.sentenceJa||""});
+    setWeakSents(list);
+  }
+}
+function renderWeakSentList(){
+  const list=getWeakSents();
+  const el=document.getElementById("weak-sent-list");
+  if(!el)return;
+  el.innerHTML="";
+  if(!list.length){
+    el.innerHTML='<div class="weak-sent-row" style="justify-content:center;color:var(--ink3)">苦手な例文はまだありません</div>';
+    return;
+  }
+  list.forEach((s,i)=>{
+    const row=document.createElement("div");row.className="weak-sent-row";
+    const word=document.createElement("div");word.className="weak-sent-word";word.textContent=s.word;
+    const right=document.createElement("div");right.style.cssText="flex:1;min-width:0";
+    const sent=document.createElement("div");sent.className="weak-sent-sent";sent.textContent=s.sentence;
+    // 和訳トグル
+    if(s.sentenceJa){
+      const jaBtn=document.createElement("div");
+      jaBtn.style.cssText="font-size:.78rem;color:var(--acc);cursor:pointer;margin-top:.3rem;display:inline-flex;align-items:center;gap:.25rem";
+      jaBtn.innerHTML="🔍 和訳";
+      const jaText=document.createElement("div");
+      jaText.className="weak-sent-ja";jaText.style.display="none";jaText.textContent=s.sentenceJa;
+      let open=false;
+      jaBtn.onclick=()=>{open=!open;jaText.style.display=open?"block":"none";jaBtn.innerHTML=open?"🔼 和訳を隠す":"🔍 和訳";};
+      right.append(sent,jaBtn,jaText);
+    }else{
+      right.appendChild(sent);
+    }
+    const del=document.createElement("div");del.className="weak-sent-del";del.textContent="削除";
+    del.onclick=()=>{const all=getWeakSents();all.splice(i,1);setWeakSents(all);renderWeakSentList()};
+    row.append(word,right,del);el.appendChild(row);
+  });
+}
+
+// ================================================================
+// 例文フラッシュカード
+// ================================================================
+function flipSentCard(e){
+  if(e&&e.target.closest("button"))return;
+  const fi=document.getElementById("sent-flash-inner");
+  if(fi)fi.classList.toggle("flipped");
+}
+function renderSentCard(){
+  const sentences=(A.sentData?.sentences||[]).filter(s=>s&&s.sentence);
+  if(!sentences.length)return;
+  const idx=A.sentCardIdx||0;
+  const s=sentences[idx];
+  if(!s)return;
+  const w=A.sentWords?.find(x=>(x.word||x.w||"")===s.word);
+  const meaning=w?.meaning||w?.m||"";
+  // 表面
+  const wordEl=document.getElementById("sent-flash-word");
+  if(wordEl)wordEl.textContent=s.word+(meaning?" ("+meaning+")":"");
+  const sentEl=document.getElementById("sent-flash-sent");
+  if(sentEl)sentEl.textContent=s.sentence||"";
+  // 裏面
+  const wordBack=document.getElementById("sent-flash-word-back");
+  if(wordBack)wordBack.textContent=s.word+(meaning?" ("+meaning+")":"");
+  const jaEl=document.getElementById("sent-flash-ja");
+  if(jaEl)jaEl.textContent=s.sentenceJa||s.sentence||"";
+  // 進捗
+  const prog=document.getElementById("sent-prog");
+  if(prog)prog.textContent=`${idx+1}/${sentences.length}`;
+  // ボタン
+  const prev=document.getElementById("sent-prev");
+  const next=document.getElementById("sent-next");
+  if(prev)prev.disabled=idx===0;
+  if(next)next.disabled=idx>=sentences.length-1;
+  // 状態リセット
+  const fi=document.getElementById("sent-flash-inner");
+  if(fi)fi.classList.remove("flipped");
+  const status=document.getElementById("sent-status");
+  if(status)status.textContent="";
+}
+function prevSentCard(){
+  if((A.sentCardIdx||0)>0){A.sentCardIdx--;renderSentCard()}
+}
+function nextSentCard(){
+  const max=(A.sentData?.sentences||[]).filter(s=>s&&s.sentence).length-1;
+  if((A.sentCardIdx||0)<max){A.sentCardIdx++;renderSentCard()}
+}
+function sentOboeta(){
+  showToast("✅ 覚えた！");
+  const status=document.getElementById("sent-status");
+  if(status)status.textContent="✅ 覚えた！";
+  setTimeout(()=>{
+    const max=(A.sentData?.sentences||[]).filter(s=>s&&s.sentence).length;
+    if((A.sentCardIdx||0)<max-1){A.sentCardIdx++;renderSentCard()}
+    else showToast("🎉 全ての例文を確認しました！");
+  },350);
+}
+function sentFuan(){
+  const sentences=(A.sentData?.sentences||[]).filter(s=>s&&s.sentence);
+  const s=sentences[A.sentCardIdx||0];
+  if(s){addWeakSent(s);showToast("⚠️ 苦手リストに追加しました");}
+  const status=document.getElementById("sent-status");
+  if(status)status.textContent="🔖 苦手リストに追加";
+  setTimeout(()=>{
+    const max=sentences.length;
+    if((A.sentCardIdx||0)<max-1){A.sentCardIdx++;renderSentCard()}
+    else showToast("🎉 全ての例文を確認しました！");
+  },350);
+}
+
+// renderSentCard を呼ぶように renderSent を上書き
+const _origRenderSent=typeof renderSent!=="undefined"?renderSent:null;
+function renderSent(){
+  A.sentCardIdx=0;
+  renderSentCard();
+}
+
 </script>
 
 <!-- AI質問バー（採点・解説画面で表示） -->
@@ -4248,5 +4422,24 @@ document.addEventListener("DOMContentLoaded", () => {
     <button class="ai-ask-send" id="ai-ask-send" onclick="sendAiQuestion()">送信</button>
   </div>
 </div>
+
+<!-- 苦手基本例文リスト -->
+<div id="s-weak-sent" class="scr">
+<header class="hd"><div class="hd-in">
+  <button class="hd-back" onclick="go('s-anki-top')">← 戻る</button>
+  <span style="font-weight:700;font-size:.93rem">⚠️ 苦手基本例文</span>
+  <div style="width:70px"></div>
+</div></header>
+<div class="weak-wrap">
+  <div style="font-size:.88rem;color:var(--ink2);background:var(--warnl);border:1px solid var(--warn);border-radius:var(--r);padding:.75rem 1rem;line-height:1.6;margin-bottom:.75rem">
+    ⚠️ 不安…を押した例文が保存されます。タップして和訳を確認しましょう。
+  </div>
+  <div id="weak-sent-list"></div>
+  <div style="display:flex;gap:.75rem;justify-content:center;margin-top:1.5rem">
+    <button class="chip red" id="btn-weak-sent-clear">🗑 全て削除</button>
+  </div>
+</div>
+</div>
+
 </body>
 </html>
