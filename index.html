@@ -3490,9 +3490,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   // 基本例文カードのクリックリスナー
   const bfw=document.getElementById("basic-flash-wrap");
   if(bfw){
-    bfw.addEventListener("click",(e)=>{
+    bfw.addEventListener("click",function(e){
       if(e.target.closest("button"))return;
-      flipBasicCard(e);
+      const fi=document.getElementById("basic-flash-inner");
+      if(fi)fi.classList.toggle("flipped");
     });
   }
   setupCardButtons();
@@ -4637,14 +4638,14 @@ function saveBasicQuiz(){
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area" id="basic-card-area">
-  <div class="sent-flash-wrap" id="basic-flash-wrap" onclick="flipBasicCard(event)">
+  <div class="sent-flash-wrap" id="basic-flash-wrap">
     <div class="sent-flash-inner" id="basic-flash-inner">
-      <div class="sent-flash-front" onclick="flipBasicCard(event)">
+      <div class="sent-flash-front">
         <div style="font-size:.75rem;color:var(--ink3);margin-bottom:.25rem" id="basic-card-no"></div>
         <div class="sent-flash-sent" id="basic-card-front"></div>
         <div class="sent-flash-hint">タップして裏返す</div>
       </div>
-      <div class="sent-flash-back" onclick="flipBasicCard(event)">
+      <div class="sent-flash-back">
         <div class="sent-flash-ja" id="basic-card-back"></div>
         <div class="sent-flash-hint">もう一度タップで表に戻る</div>
       </div>
