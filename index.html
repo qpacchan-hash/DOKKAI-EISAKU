@@ -529,19 +529,9 @@ input,textarea{font-family:var(--fu)}
 .weak-sent-del{font-size:.75rem;color:var(--ng);cursor:pointer;padding:.2rem .5rem;border-radius:4px;white-space:nowrap;flex-shrink:0}
 .weak-sent-del:hover{background:var(--ng);color:#fff}
 
-/* ── 単語フラッシュカード ── */
-.flash-front,.flash-back{
-  position:absolute;inset:0;
-  -webkit-backface-visibility:hidden;backface-visibility:hidden;
-  border-radius:var(--rl);box-shadow:var(--shm);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:1.5rem;text-align:center;gap:.5rem;
-}
-@media(max-width:680px){.flash-card{height:200px}.flash-word{font-size:1.6rem}.flash-mean{font-size:1.2rem}}
-
 /* ── 単語カード（表示切替方式） ── */
-.flash-card{width:100%;max-width:500px;cursor:pointer;border-radius:var(--rl);box-shadow:var(--shm);min-height:200px;user-select:none;-webkit-user-select:none}
-.flash-front,.flash-back{border-radius:var(--rl);min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;gap:.5rem}
+.flash-card{width:100%;max-width:500px;cursor:pointer;border-radius:var(--rl);box-shadow:var(--shm);min-height:200px;user-select:none;-webkit-user-select:none;position:relative}
+.flash-front,.flash-back{position:static;border-radius:var(--rl);min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;gap:.5rem;-webkit-backface-visibility:visible;backface-visibility:visible}
 .flash-front{background:#fff;border:2px solid var(--rule)}
 .flash-back{background:var(--accl);border:2px solid var(--acc);display:none}
 .flash-card.flipped .flash-front{display:none}
@@ -1479,7 +1469,7 @@ input,textarea{font-family:var(--fu)}
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area">
-  <div class="flash-card" id="flash-card" onclick="flipCard()">
+  <div class="flash-card" id="flash-card">
     <div class="flash-front">
       <div class="flash-side" id="card-front-side">表</div>
       <div class="flash-word" id="card-front-word"></div>
@@ -1590,16 +1580,14 @@ input,textarea{font-family:var(--fu)}
 </div></header>
 <div class="card-area">
   <div class="flash-card" id="weak-flash-card">
-    <div class="flash-inner" id="weak-flash-inner">
-      <div class="flash-front">
-        <div class="flash-side">英語</div>
-        <div class="flash-word" id="wcard-front-word"></div>
-        <div class="flash-hint">タップして裏返す</div>
-      </div>
-      <div class="flash-back">
-        <div class="flash-side">意味</div>
-        <div class="flash-mean" id="wcard-back-mean"></div>
-      </div>
+    <div class="flash-front">
+      <div class="flash-side">英語</div>
+      <div class="flash-word" id="wcard-front-word"></div>
+      <div class="flash-hint">タップして裏返す</div>
+    </div>
+    <div class="flash-back">
+      <div class="flash-side">意味</div>
+      <div class="flash-mean" id="wcard-back-mean"></div>
     </div>
   </div>
   <div class="card-nav">
@@ -3104,17 +3092,15 @@ function restartFuanCard(){
   A.cardIdx=0;A.cardFuan=new Set();
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button')){var fi=document.getElementById('flash-inner');if(fi)fi.classList.toggle('flipped')}">
-      <div class="flash-inner" id="flash-inner">
-        <div class="flash-front">
-          <div class="flash-side" id="card-front-side">表</div>
-          <div class="flash-word" id="card-front-word"></div>
-          <div class="flash-hint">タップして裏返す</div>
-        </div>
-        <div class="flash-back">
-          <div class="flash-side" id="card-back-side">裏</div>
-          <div class="flash-mean" id="card-back-mean"></div>
-        </div>
+    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button'))flipCard()">
+      <div class="flash-front">
+        <div class="flash-side" id="card-front-side">表</div>
+        <div class="flash-word" id="card-front-word"></div>
+        <div class="flash-hint">タップして裏返す</div>
+      </div>
+      <div class="flash-back">
+        <div class="flash-side" id="card-back-side">裏</div>
+        <div class="flash-mean" id="card-back-mean"></div>
       </div>
     </div>
     <div class="card-nav">
@@ -3138,17 +3124,15 @@ function restartCard(){
   // card-areaを再構築
   const s=document.getElementById("s-card");
   s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button')){var fi=document.getElementById('flash-inner');if(fi)fi.classList.toggle('flipped')}">
-      <div class="flash-inner" id="flash-inner">
-        <div class="flash-front">
-          <div class="flash-side" id="card-front-side">表</div>
-          <div class="flash-word" id="card-front-word"></div>
-          <div class="flash-hint">タップして裏返す</div>
-        </div>
-        <div class="flash-back">
-          <div class="flash-side" id="card-back-side">裏</div>
-          <div class="flash-mean" id="card-back-mean"></div>
-        </div>
+    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button'))flipCard()">
+      <div class="flash-front">
+        <div class="flash-side" id="card-front-side">表</div>
+        <div class="flash-word" id="card-front-word"></div>
+        <div class="flash-hint">タップして裏返す</div>
+      </div>
+      <div class="flash-back">
+        <div class="flash-side" id="card-back-side">裏</div>
+        <div class="flash-mean" id="card-back-mean"></div>
       </div>
     </div>
     <div class="card-nav">
@@ -3310,10 +3294,10 @@ function renderWeakCard(){
   if(cnt)cnt.textContent=`${A.weakCardIdx+1} / ${A.weakCardWords.length}`;
   const fw=document.getElementById("wcard-front-word");if(fw)fw.textContent=w.word;
   const bm=document.getElementById("wcard-back-mean");if(bm)bm.textContent=w.meaning;
-  const fi=document.getElementById("weak-flash-inner");if(fi)fi.classList.remove("flipped");
+  const fc=document.getElementById("weak-flash-card");if(fc)fc.classList.remove("flipped");
 }
 function flipWeakCard(){
-  const fi=document.getElementById("weak-flash-inner");if(fi)fi.classList.toggle("flipped");
+  const fc=document.getElementById("weak-flash-card");if(fc)fc.classList.toggle("flipped");
 }
 function prevWeakCard(){if(A.weakCardIdx>0){A.weakCardIdx--;renderWeakCard()}}
 function nextWeakCard(){if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}}
