@@ -529,17 +529,20 @@ input,textarea{font-family:var(--fu)}
 .weak-sent-del{font-size:.75rem;color:var(--ng);cursor:pointer;padding:.2rem .5rem;border-radius:4px;white-space:nowrap;flex-shrink:0}
 .weak-sent-del:hover{background:var(--ng);color:#fff}
 
-/* ── 単語カード（表示切替方式） ── */
-.flash-card{width:100%;max-width:500px;cursor:pointer;border-radius:var(--rl);box-shadow:var(--shm);min-height:200px;user-select:none;-webkit-user-select:none;position:relative}
-.flash-front,.flash-back{position:static;border-radius:var(--rl);min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;gap:.5rem;-webkit-backface-visibility:visible;backface-visibility:visible}
-.flash-front{background:#fff;border:2px solid var(--rule)}
-.flash-back{background:var(--accl);border:2px solid var(--acc);display:none}
-.flash-card.flipped .flash-front{display:none}
-.flash-card.flipped .flash-back{display:flex}
+/* ── 単語カード・苦手カード（3Dフリップアニメーション） ── */
+.flash-card{width:100%;max-width:500px;cursor:pointer;min-height:220px;user-select:none;-webkit-user-select:none;position:relative;perspective:1000px;background:transparent}
+.flash-card-inner{position:relative;width:100%;min-height:220px;transition:transform .45s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;display:grid}
+.flash-card.flipped .flash-card-inner{transform:rotateY(180deg)}
+.flash-front,.flash-back{grid-area:1/1;border-radius:var(--rl);box-shadow:var(--shm);min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;gap:.5rem;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.flash-front{background:#fff;border:2px solid var(--rule);z-index:2;transform:rotateY(0deg)}
+.flash-back{background:var(--accl);border:2px solid var(--acc);transform:rotateY(180deg);pointer-events:none}
+.flash-card.flipped .flash-front{pointer-events:none}
+.flash-card.flipped .flash-back{pointer-events:auto}
 .flash-word{font-size:2rem;font-weight:800;color:var(--ink);font-family:var(--fe)}
 .flash-mean{font-size:1.5rem;font-weight:700;color:var(--acc)}
 .flash-side{font-size:.78rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em}
 .flash-hint{font-size:.85rem;color:var(--ink2)}
+.card-nav{display:flex;align-items:center;gap:1rem;justify-content:center}
 @media(max-width:680px){.flash-card{min-height:180px}.flash-word{font-size:1.6rem}.flash-mean{font-size:1.2rem}}
 </style>
 </head>
@@ -1468,16 +1471,19 @@ input,textarea{font-family:var(--fu)}
   <span style="font-weight:700;font-size:.85rem">🃏 単語カード <span id="card-progress"></span></span>
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
-<div class="card-area">
+<div class="card-area" id="card-area">
   <div class="flash-card" id="flash-card">
-    <div class="flash-front">
-      <div class="flash-side" id="card-front-side">表</div>
-      <div class="flash-word" id="card-front-word"></div>
-      <div class="flash-hint">タップして裏返す</div>
-    </div>
-    <div class="flash-back">
-      <div class="flash-side" id="card-back-side">裏</div>
-      <div class="flash-mean" id="card-back-mean"></div>
+    <div class="flash-card-inner">
+      <div class="flash-front">
+        <div class="flash-side" id="card-front-side">表</div>
+        <div class="flash-word" id="card-front-word"></div>
+        <div class="flash-hint">タップして裏返す</div>
+      </div>
+      <div class="flash-back">
+        <div class="flash-side" id="card-back-side">裏</div>
+        <div class="flash-mean" id="card-back-mean"></div>
+        <div class="flash-hint">もう一度タップで表に戻る</div>
+      </div>
     </div>
   </div>
   <div class="card-nav">
@@ -1578,27 +1584,31 @@ input,textarea{font-family:var(--fu)}
   <span style="font-weight:700;font-size:.85rem">🃏 苦手単語カード <span id="weak-card-progress"></span></span>
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
-<div class="card-area">
+<div class="card-area" id="weak-card-area">
   <div class="flash-card" id="weak-flash-card">
-    <div class="flash-front">
-      <div class="flash-side">英語</div>
-      <div class="flash-word" id="wcard-front-word"></div>
-      <div class="flash-hint">タップして裏返す</div>
-    </div>
-    <div class="flash-back">
-      <div class="flash-side">意味</div>
-      <div class="flash-mean" id="wcard-back-mean"></div>
+    <div class="flash-card-inner">
+      <div class="flash-front">
+        <div class="flash-side">英語</div>
+        <div class="flash-word" id="wcard-front-word"></div>
+        <div class="flash-hint">タップして裏返す</div>
+      </div>
+      <div class="flash-back">
+        <div class="flash-side">意味</div>
+        <div class="flash-mean" id="wcard-back-mean"></div>
+        <div class="flash-hint">もう一度タップで表に戻る</div>
+      </div>
     </div>
   </div>
   <div class="card-nav">
-    <button class="chip" onclick="prevWeakCard()">◀ 前へ</button>
+    <button class="chip" id="weak-card-prev" onclick="prevWeakCard()">◀ 前へ</button>
     <span class="card-counter" id="weak-card-counter">1 / 1</span>
-    <button class="chip" onclick="nextWeakCard()">次へ ▶</button>
+    <button class="chip" id="weak-card-next" onclick="nextWeakCard()">次へ ▶</button>
   </div>
   <div class="card-acts">
     <button class="btn-oboeta" onclick="weakCardOboeta()">覚えた！ →リストから削除</button>
     <button class="btn-fuan" onclick="weakCardFuan()">まだ不安…</button>
   </div>
+  <div style="font-size:.82rem;color:var(--ink3)" id="weak-card-status"></div>
 </div>
 </div>
 
@@ -1634,7 +1644,7 @@ const A = {
   sentWords:[], sentData:null, sentCardIdx:0,
   // weak
   weakWords:[],
-  weakCardWords:[], weakCardIdx:0,
+  weakCardWords:[], weakCardSessionWords:[], weakCardIdx:0, weakCardFuan:new Set(),
 };
 
 // ================================================================
@@ -2822,85 +2832,6 @@ function toggleJaPrm(){
 }
 
 // ================================================================
-// 保存機能
-// ================================================================
-function getSaved(){try{return JSON.parse(localStorage.getItem("saved_v4")||"[]")}catch{return[]}}
-function setSaved(arr){try{localStorage.setItem("saved_v4",JSON.stringify(arr))}catch{alert("保存容量が不足しています")}}
-
-$("btn-r-save").onclick=()=>saveReading(false);
-$("btn-a-save").onclick=()=>saveReading(true);
-$("btn-w-save").onclick=()=>saveWriting();
-
-function saveReading(isAnalog){
-  const saved=getSaved();
-  let score=null;
-  if(!isAnalog){
-    const qs=activeQs();
-    const cor=qs.filter(q=>{const ua=(A.uans[q.id]||"").trim();return q.type==="choice"||q.type==="order"?ua.charAt(0)===(q.answer||"").trim().charAt(0):ua.length>0}).length;
-    score={correct:cor,total:qs.length};
-  }else{
-    let total=0,maxTotal=0;
-    document.querySelectorAll(".pts-inp").forEach(inp=>{const pts=parseInt(inp.dataset.pts||0);total+=Math.max(0,Math.min(parseInt(inp.value||0),pts));maxTotal+=pts});
-    score={correct:total,total:maxTotal,isPoints:true};
-  }
-  saved.unshift({id:Date.now(),type:"reading",mode:isAnalog?"analog":"digital",savedAt:new Date().toLocaleString("ja-JP"),settings:{...A.r},qdata:A.qdata,uans:{...A.uans},wrong:[...A.wrong],score,elapsed:A.eSec,label:(GJ[A.r.genre]||"読解")+" ／ "+(A.r.difficulty||"").toUpperCase()+" ／ "+(A.r.school==="junior"?"中学":"高校")+(A.r.grade==="ronin"?"浪人":A.r.grade+"年")});
-  setSaved(saved.slice(0,50));showToast("📂 保存しました！");
-}
-function saveWriting(){
-  const saved=getSaved();
-  saved.unshift({id:Date.now(),type:"writing",savedAt:new Date().toLocaleString("ja-JP"),settings:{...A.w},wdata:A.wdata,wans:A.wans,elapsed:A.eSec,label:(WTYPE_JP[A.w.wtype]||"英作文")+" ／ "+(A.w.school==="junior"?"中学":"高校")+(A.w.grade==="ronin"?"浪人":A.w.grade+"年")});
-  setSaved(saved.slice(0,50));showToast("📂 保存しました！");
-}
-
-function renderSaved(){
-  const saved=getSaved();const list=$("saved-list");list.innerHTML="";
-  const f=A.savedFilter;
-  const filtered=saved.filter(item=>{
-    if(f.type!=="all"&&item.type!==f.type)return false;
-    if(f.school!=="all"&&item.settings?.school!==f.school)return false;
-    return true;
-  });
-  if(!filtered.length){list.innerHTML='<div class="saved-empty">保存した問題はありません。</div>';return}
-  filtered.forEach(item=>{
-    const card=mk("div","saved-item");
-    const hd=div("si-hd");
-    const left=div();left.appendChild(div("si-ttl",item.label||"問題"));left.appendChild(div("si-meta","保存日時："+item.savedAt));hd.appendChild(left);
-    const tags=div("si-tags");
-    tags.appendChild(mk("span","tag",item.type==="reading"?"📖 読解":"✏️ 英作文"));
-    if(item.score){const sc=item.score.isPoints?`${item.score.correct}/${item.score.total}点`:`${item.score.correct}/${item.score.total}`;tags.appendChild(mk("span","tag",sc))}
-    if(item.elapsed)tags.appendChild(mk("span","tag","⏱ "+fmt(item.elapsed)));
-    hd.appendChild(tags);card.appendChild(hd);
-    hd.onclick=()=>{body.classList.toggle("open")};
-    const body=div("si-body");
-    if(item.type==="reading"&&item.qdata){body.appendChild(div("si-preview",(item.qdata.passage||"").slice(0,120)+"…"))}
-    else if(item.type==="writing"&&item.wdata){body.appendChild(div("si-preview",item.wdata.prompt||""))}
-    const acts=div("si-acts");
-    if(item.type==="reading"&&item.qdata){
-      const playBtn=mk("button","chip grn");playBtn.textContent="▶ 解く";
-      playBtn.onclick=e2=>{e2.stopPropagation();A.qdata=item.qdata;A.uans={};A.wrong=[];A.redoIds=null;A.r={...item.settings};$("rs-badge").textContent=item.label||"読解";$("rs-min").textContent=item.qdata.targetMinutes||10;go("s-rmode")};
-      const exBtn=mk("button","chip");exBtn.textContent="💡 解説";
-      exBtn.onclick=e2=>{e2.stopPropagation();A.qdata=item.qdata;A.uans=item.uans||{};A.wrong=item.wrong||[];renderExpl(false);go("s-expl")};
-      acts.append(playBtn,exBtn);
-    }else if(item.type==="basic"&&item.questions){
-      const playBtn=document.createElement("button");playBtn.className="chip grn";playBtn.textContent="▶ 解く";
-      playBtn.onclick=e=>{
-        e.stopPropagation();
-        loadSavedBasicTest(item,false);
-      };
-      const exBtn=document.createElement("button");exBtn.className="chip";exBtn.textContent="💡 解説";
-      exBtn.onclick=e=>{
-        e.stopPropagation();
-        loadSavedBasicTest(item,true);
-      };
-      acts.append(playBtn,exBtn);
-    }
-    const delBtn=mk("button","chip red");delBtn.textContent="🗑 削除";
-    delBtn.onclick=e2=>{e2.stopPropagation();if(!confirm("削除しますか？"))return;const all=getSaved();all.splice(all.findIndex(x=>x.id===item.id),1);setSaved(all);renderSaved()};
-    acts.appendChild(delBtn);body.appendChild(acts);card.appendChild(body);list.appendChild(card);
-  });
-}
-
-// ================================================================
 // 単語テスト
 // ================================================================
 $("btn-vtest-start").onclick=()=>{
@@ -3001,6 +2932,44 @@ function renderVResult(cor,total,wrongWords){
 // ================================================================
 // 単語カード
 // ================================================================
+function restoreCardAreaUI(){
+  const area=document.getElementById("card-area")||document.querySelector("#s-card .card-area");
+  if(!area)return;
+  area.innerHTML=`
+    <div class="flash-card" id="flash-card">
+      <div class="flash-card-inner">
+        <div class="flash-front">
+          <div class="flash-side" id="card-front-side">表</div>
+          <div class="flash-word" id="card-front-word"></div>
+          <div class="flash-hint">タップして裏返す</div>
+        </div>
+        <div class="flash-back">
+          <div class="flash-side" id="card-back-side">裏</div>
+          <div class="flash-mean" id="card-back-mean"></div>
+          <div class="flash-hint">もう一度タップで表に戻る</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
+      <span class="card-counter" id="card-counter">1 / 1</span>
+      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
+    </div>
+    <div class="card-acts">
+      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
+    </div>
+    <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
+  `;
+  const fc=document.getElementById("flash-card");
+  if(fc){
+    fc.addEventListener("click",(e)=>{
+      if(e.target.closest("button"))return;
+      flipCard();
+    });
+  }
+}
+
 $("btn-card-start").onclick=()=>{
   A.c.from=parseInt($("c-from").value);A.c.to=parseInt($("c-to").value);
   const words=getWordList(A.c.book).filter(w=>w.n>=A.c.from&&w.n<=A.c.to);
@@ -3008,7 +2977,7 @@ $("btn-card-start").onclick=()=>{
   // シャッフルして全単語を使用
   A.cardWords=[...words].sort(()=>Math.random()-.5);
   A.cardIdx=0;A.cardFuan=new Set();
-  // card-progress の最大値を設定
+  restoreCardAreaUI();
   renderCard();go("s-card");
   setTimeout(()=>showToast("📚 "+words.length+"語を読み込みました"),400);
 };
@@ -3085,69 +3054,19 @@ function showCardResult(){
   if(pct>=80)setTimeout(()=>showToast(pct>=100?"🎉 完璧！全部覚えた！":"✨ よくできました！"),600);
 }
 function restartFuanCard(){
-  // 不安リストの単語だけで再スタート
   const fuanWords=[...A.cardFuan].map(i=>A.cardWords[i]).filter(Boolean);
   if(!fuanWords.length){showToast("不安な単語がありません！");return}
   A.cardWords=[...fuanWords].sort(()=>Math.random()-.5);
   A.cardIdx=0;A.cardFuan=new Set();
-  const s=document.getElementById("s-card");
-  s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button'))flipCard()">
-      <div class="flash-front">
-        <div class="flash-side" id="card-front-side">表</div>
-        <div class="flash-word" id="card-front-word"></div>
-        <div class="flash-hint">タップして裏返す</div>
-      </div>
-      <div class="flash-back">
-        <div class="flash-side" id="card-back-side">裏</div>
-        <div class="flash-mean" id="card-back-mean"></div>
-      </div>
-    </div>
-    <div class="card-nav">
-      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
-      <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
-    </div>
-    <div class="card-acts">
-      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
-      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
-    </div>
-    <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
-  `;
+  restoreCardAreaUI();
   renderCard();
-  setTimeout(setupCardButtons,100);
   showToast("⚠️ 不安な単語 "+fuanWords.length+"語 でやり直し！");
 }
 function restartCard(){
   A.cardIdx=0;A.cardFuan=new Set();
   A.cardWords=[...A.cardWords].sort(()=>Math.random()-.5);
-  // card-areaを再構築
-  const s=document.getElementById("s-card");
-  s.querySelector(".card-area").innerHTML=`
-    <div class="flash-card" id="flash-card" onclick="if(!event.target.closest('button'))flipCard()">
-      <div class="flash-front">
-        <div class="flash-side" id="card-front-side">表</div>
-        <div class="flash-word" id="card-front-word"></div>
-        <div class="flash-hint">タップして裏返す</div>
-      </div>
-      <div class="flash-back">
-        <div class="flash-side" id="card-back-side">裏</div>
-        <div class="flash-mean" id="card-back-mean"></div>
-      </div>
-    </div>
-    <div class="card-nav">
-      <button class="chip" id="card-prev" onclick="prevCard()">◀ 前へ</button>
-      <span class="card-counter" id="card-counter">1 / 1</span>
-      <button class="chip" id="card-next" onclick="nextCard()">次へ ▶</button>
-    </div>
-    <div class="card-acts">
-      <button class="btn-oboeta" onclick="cardOboeta()">覚えた！ ✓</button>
-      <button class="btn-fuan" onclick="cardFuan()">不安… △</button>
-    </div>
-    <div style="font-size:.82rem;color:var(--ink3)" id="card-status"></div>
-  `;
+  restoreCardAreaUI();
   renderCard();
-  setTimeout(setupCardButtons,100);
 }
 function cardOboeta(){
   const raw=A.cardWords[A.cardIdx];
@@ -3269,8 +3188,8 @@ function renderWeakList(){
   }
   list.forEach((w,i)=>{
     const row=document.createElement("div");row.className="weak-row";
-    const num=document.createElement("span");num.className="weak-num";num.textContent=String(w.no);
-    const word=document.createElement("span");word.className="weak-word";word.textContent=w.word;
+    const num=document.createElement("span");num.className="weak-num";num.textContent=w.no?String(w.no):"-";
+    const word=document.createElement("span");word.className="weak-word";word.innerHTML=esc(w.word)+getPOSBadgeHTML(w.meaning);
     const mean=document.createElement("span");mean.className="weak-mean";mean.textContent=w.meaning;
     const del=document.createElement("span");del.className="weak-del";del.textContent="削除";
     del.onclick=()=>{const all=getWeakWords();all.splice(i,1);setWeakWords(all);renderWeakList()};
@@ -3278,41 +3197,152 @@ function renderWeakList(){
   });
 }
 
-function startWeakCard(){
-  const list=getWeakWords();
+function restoreWeakCardAreaUI(){
+  const area=document.getElementById("weak-card-area")||document.querySelector("#s-weak-card .card-area");
+  if(!area)return;
+  area.innerHTML=`
+    <div class="flash-card" id="weak-flash-card">
+      <div class="flash-card-inner">
+        <div class="flash-front">
+          <div class="flash-side">英語</div>
+          <div class="flash-word" id="wcard-front-word"></div>
+          <div class="flash-hint">タップして裏返す</div>
+        </div>
+        <div class="flash-back">
+          <div class="flash-side">意味</div>
+          <div class="flash-mean" id="wcard-back-mean"></div>
+          <div class="flash-hint">もう一度タップで表に戻る</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="chip" id="weak-card-prev" onclick="prevWeakCard()">◀ 前へ</button>
+      <span class="card-counter" id="weak-card-counter">1 / 1</span>
+      <button class="chip" id="weak-card-next" onclick="nextWeakCard()">次へ ▶</button>
+    </div>
+    <div class="card-acts">
+      <button class="btn-oboeta" onclick="weakCardOboeta()">覚えた！ →リストから削除</button>
+      <button class="btn-fuan" onclick="weakCardFuan()">まだ不安…</button>
+    </div>
+    <div style="font-size:.82rem;color:var(--ink3)" id="weak-card-status"></div>
+  `;
+  const wfc=document.getElementById("weak-flash-card");
+  if(wfc){
+    wfc.addEventListener("click",(e)=>{
+      if(e.target.closest("button"))return;
+      flipWeakCard();
+    });
+  }
+}
+
+function startWeakCard(customWords){
+  const list=customWords||getWeakWords();
   if(!list.length){alert("苦手単語リストが空です");return}
   A.weakCardWords=[...list].sort(()=>Math.random()-.5);
-  A.weakCardIdx=0;renderWeakCard();go("s-weak-card");
+  A.weakCardSessionWords=[...A.weakCardWords];
+  A.weakCardIdx=0;
+  A.weakCardFuan=new Set();
+  restoreWeakCardAreaUI();
+  renderWeakCard();
+  go("s-weak-card");
 }
 
 function renderWeakCard(){
   const raw=A.weakCardWords[A.weakCardIdx];if(!raw)return;
   const w={word:raw.w||raw.word||"",meaning:raw.m||raw.meaning||""};
+  const progTxt=`${A.weakCardIdx+1} / ${A.weakCardWords.length}枚`;
   const prog=document.getElementById("weak-card-progress");
-  if(prog)prog.textContent=`${A.weakCardIdx+1}/${A.weakCardWords.length}`;
+  if(prog)prog.textContent=progTxt;
   const cnt=document.getElementById("weak-card-counter");
-  if(cnt)cnt.textContent=`${A.weakCardIdx+1} / ${A.weakCardWords.length}`;
-  const fw=document.getElementById("wcard-front-word");if(fw)fw.textContent=w.word;
-  const bm=document.getElementById("wcard-back-mean");if(bm)bm.textContent=w.meaning;
-  const fc=document.getElementById("weak-flash-card");if(fc)fc.classList.remove("flipped");
+  if(cnt)cnt.textContent=progTxt;
+  const fw=document.getElementById("wcard-front-word");
+  if(fw)fw.innerHTML=w.word+getPOSBadgeHTML(w.meaning);
+  const bm=document.getElementById("wcard-back-mean");
+  if(bm)bm.textContent=w.meaning;
+  const fc=document.getElementById("weak-flash-card");
+  if(fc)fc.classList.remove("flipped");
+  const statusEl=document.getElementById("weak-card-status");
+  if(statusEl)statusEl.textContent=A.weakCardFuan.has(A.weakCardIdx)?"🔖 まだ不安として記録済み":"";
+  const prevBtn=document.getElementById("weak-card-prev");
+  const nextBtn=document.getElementById("weak-card-next");
+  if(prevBtn)prevBtn.disabled=A.weakCardIdx===0;
+  if(nextBtn)nextBtn.disabled=A.weakCardIdx>=A.weakCardWords.length-1;
 }
 function flipWeakCard(){
   const fc=document.getElementById("weak-flash-card");if(fc)fc.classList.toggle("flipped");
 }
 function prevWeakCard(){if(A.weakCardIdx>0){A.weakCardIdx--;renderWeakCard()}}
-function nextWeakCard(){if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}}
+function nextWeakCard(){
+  if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
+  else{showWeakCardResult()}
+}
 function weakCardOboeta(){
   const w=A.weakCardWords[A.weakCardIdx];
+  if(!w)return;
+  A.weakCardFuan.delete(A.weakCardIdx);
   const all=getWeakWords();
   const idx=all.findIndex(x=>(x.word||x.w)===(w.word||w.w));
-  if(idx>=0){all.splice(idx,1);setWeakWords(all)}
-  showToast("✅ リストから削除しました！");
-  if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
-  else{go("s-weak");renderWeakList();showToast("🎉 すべて完了！")}
+  if(idx>=0){all.splice(idx,1);setWeakWords(all);renderWeakList();}
+  showToast("✅ 覚えた！リストから削除しました");
+  const statusEl=document.getElementById("weak-card-status");
+  if(statusEl)statusEl.textContent="✅ 覚えた！";
+  setTimeout(()=>{
+    if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
+    else{showWeakCardResult()}
+  },400);
 }
 function weakCardFuan(){
-  showToast("📌 引き続き練習しよう");
-  if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
+  const w=A.weakCardWords[A.weakCardIdx];
+  if(!w)return;
+  A.weakCardFuan.add(A.weakCardIdx);
+  addWeakWord({n:w.no||w.n||0,word:w.word||w.w||"",meaning:w.meaning||w.m||""});
+  renderWeakList();
+  showToast("📌 まだ不安…として残しました");
+  const statusEl=document.getElementById("weak-card-status");
+  if(statusEl)statusEl.textContent="🔖 まだ不安…";
+  setTimeout(()=>{
+    if(A.weakCardIdx<A.weakCardWords.length-1){A.weakCardIdx++;renderWeakCard()}
+    else{showWeakCardResult()}
+  },400);
+}
+function showWeakCardResult(){
+  const total=A.weakCardWords.length;
+  const fuan=A.weakCardFuan.size;
+  const oboeta=total-fuan;
+  const pct=total>0?Math.round((oboeta/total)*100):0;
+  const prog=document.getElementById("weak-card-progress");
+  if(prog)prog.textContent="完了";
+  const area=document.getElementById("weak-card-area")||document.querySelector("#s-weak-card .card-area");
+  if(!area)return;
+  area.innerHTML=`
+    <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.5rem;padding:1rem">
+      <div style="font-size:1.3rem;font-weight:800;color:var(--ink)">🎉 苦手単語カード完了！</div>
+      <div style="background:#fff;border-radius:var(--rl);box-shadow:var(--shm);border:1px solid var(--rule);padding:1.75rem 2.5rem;display:flex;flex-direction:column;align-items:center;gap:.75rem">
+        <div style="font-size:3.5rem;font-weight:800;color:${pct>=80?'var(--ok)':pct>=50?'var(--acc)':'var(--warn)'}">${pct}%</div>
+        <div style="font-size:1rem;color:var(--ink2)">正答数：<strong style="color:var(--ok)">${oboeta}</strong> / ${total} 語（正答率 ${pct}%）</div>
+        ${fuan>0?`<div style="font-size:.88rem;color:var(--warn)">まだ不安…：${fuan}語（苦手リストに保持）</div>`:"<div style='font-size:.88rem;color:var(--ok)'>すべて克服しました！完璧です！</div>"}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:360px">
+        <button class="btn-start" style="font-size:1.05rem;padding:.9rem 1.5rem" onclick="restartWeakCardAll()">🔄 もう一度取り組む（${total}語）</button>
+        ${fuan>0?`<button class="btn-start" style="font-size:1.05rem;padding:.9rem 1.5rem;background:var(--warn)" onclick="restartWeakCardOnly()">⚠️ 苦手なものだけ取り組む（${fuan}語）</button>`:""}
+        <button class="chip wide red" onclick="go('s-top')">🏠 ホームに戻る</button>
+      </div>
+    </div>
+  `;
+  launchConfetti(pct);
+  if(pct>=80)setTimeout(()=>showToast(pct>=100?"🎉 苦手単語をすべて克服！":"✨ よくできました！"),600);
+}
+function restartWeakCardAll(){
+  const words=A.weakCardSessionWords&&A.weakCardSessionWords.length?A.weakCardSessionWords:getWeakWords();
+  if(!words.length){showToast("取り組む単語がありません");go("s-weak");return}
+  startWeakCard(words);
+  showToast("🔄 もう一度取り組みます（"+words.length+"語）");
+}
+function restartWeakCardOnly(){
+  const fuanWords=[...A.weakCardFuan].map(i=>A.weakCardWords[i]).filter(Boolean);
+  if(!fuanWords.length){showToast("苦手な単語はありません！");return}
+  startWeakCard(fuanWords);
+  showToast("⚠️ 苦手な単語 "+fuanWords.length+"語 で再挑戦！");
 }
 
 // ================================================================
@@ -3473,9 +3503,9 @@ function renderSaved(){
     }else if(item.type==="writing"&&item.wdata){
       const prev=document.createElement("div");prev.className="si-preview";
       prev.textContent=item.wdata.prompt||"";body.appendChild(prev);
-    }else if(item.type==="basic"&&item.questions){
+    }else if(item.type==="basic"){
       const prev=document.createElement("div");prev.className="si-preview";
-      prev.textContent=(item.settings?.school==="high"?"高校英文法":"中学英文法")+" ｜ 出題範囲 No."+(item.range?.[0]||1)+"〜"+(item.range?.[1]||10)+"（全20問）";
+      prev.textContent=item.label||"基本例文テスト";
       body.appendChild(prev);
     }
     const acts=document.createElement("div");acts.className="si-acts";
@@ -4470,6 +4500,10 @@ function showBasicExpl(){
   go("s-basic-expl");
 }
 
+function loadSavedBasicTest(item, showExp){
+  if(item.level) selectBasicLevel(item.level);
+  if(showExp){ showBasicExpl(); } else { startBasicQuiz(); }
+}
 function saveBasicQuiz(){
   const saved=getSaved();
   const cor=BS.quizResults.filter(r=>r.correct).length;
