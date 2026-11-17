@@ -1132,164 +1132,6 @@ input,textarea{font-family:var(--fu)}
   </div>
 </div></div>
 
-<!-- ================================================================
-     基本例文モード
-================================================================ -->
-
-<!-- S_BASIC_1: 基本例文 中学/高校選択 -->
-<div id="s-basic-level" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-top')">← トップ</button>
-  <div class="hd-logo"><span class="hd-logo-en">📝</span><span>基本例文</span></div>
-  <div style="width:70px"></div>
-</div></header>
-<div class="ctr-wrap">
-  <div class="ctr-ttl">📝 基本例文</div>
-  <div class="ctr-sub">中学・高校を選んでください</div>
-  <div class="ctr-col">
-    <button class="chip wide" onclick="selectBasicLevel('junior')" style="padding:1rem;font-size:1rem">
-      🏫 中学英文法<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">全27単元・基本例文 1〜91</span>
-    </button>
-    <button class="chip wide" onclick="selectBasicLevel('high')" style="padding:1rem;font-size:1rem">
-      🎓 高校英文法<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">全13単元・基本例文 1〜145</span>
-    </button>
-  </div>
-</div>
-</div>
-
-<!-- S_BASIC_2: 基本例文 テスト/特訓モード選択 -->
-<div id="s-basic-modesel" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-basic-level')">← 戻る</button>
-  <div class="hd-logo"><span class="hd-logo-en">📝</span><span id="basic-modesel-title">基本例文 モード選択</span></div>
-  <div style="width:70px"></div>
-</div></header>
-<div class="ctr-wrap">
-  <div class="ctr-ttl" id="basic-modesel-head">📝 基本例文</div>
-  <div class="ctr-sub">モードを選んでください</div>
-  <div class="ctr-col">
-    <button class="chip wide" onclick="openBasicTestSetup()" style="padding:1rem;font-size:1rem">
-      ✍️ テストモード<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">範囲指定 → 並べ替え・空所補充・英和・和英（各5問）</span>
-    </button>
-    <button class="chip wide yel" onclick="openBasicDrill()" style="padding:1rem;font-size:1rem">
-      💡 特訓モード<br><span style="font-size:.8rem;font-weight:400;color:var(--ink3)">単元別の基本例文一覧 ＆ 例文暗記カード</span>
-    </button>
-  </div>
-</div>
-</div>
-
-<!-- S_BASIC_3: 基本例文 テスト範囲設定 -->
-<div id="s-basic-test-setup" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-basic-modesel')">← 戻る</button>
-  <div class="hd-logo"><span>基本例文 テスト設定</span></div>
-  <div style="width:70px"></div>
-</div></header>
-<div class="vocab-set-wrap">
-  <div class="step-card">
-    <div class="step-hd">例文番号の範囲指定</div>
-    <div class="range-row">
-      <label>No.</label>
-      <input type="number" class="range-inp" id="basic-range-start" min="1" value="1"/>
-      <span class="range-sep">〜</span>
-      <input type="number" class="range-inp" id="basic-range-end" min="1" value="10"/>
-    </div>
-    <div style="font-size:.82rem;color:var(--ink3);margin-top:.5rem;line-height:1.6" id="basic-test-range-info">
-      ・指定範囲の例文を最低1回は使って出題します。<br>
-      ・①並べ替え → ②空所補充 → ③英和 → ④和英 の順に各5問（計20問）出題されます。<br>
-      ・すべての設問で<strong>完答のみ正解</strong>となります。
-    </div>
-  </div>
-  <button class="btn-gen" onclick="startBasicTest()">テストを開始 ▶</button>
-</div>
-</div>
-
-<!-- S_BASIC_4: 基本例文 テスト解答画面 -->
-<div id="s-basic-test-quiz" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="if(confirm('テストを中断して戻りますか？'))go('s-basic-test-setup')">← 中断</button>
-  <div class="hd-logo"><span id="basic-quiz-sec-title">第1部：並べ替え問題</span></div>
-  <span style="font-weight:700;font-size:.85rem" id="basic-quiz-progress">1 / 20</span>
-</div></header>
-<div class="expl-wrap">
-  <div id="basic-quiz-container"></div>
-  <div style="display:flex;justify-content:space-between;gap:.8rem;margin-top:1.1rem">
-    <button class="chip" id="basic-quiz-prev" onclick="moveBasicQuiz(-1)">◀ 前の問題</button>
-    <button class="btn-pri" id="basic-quiz-next" onclick="moveBasicQuiz(1)">次の問題 ▶</button>
-  </div>
-</div>
-</div>
-
-<!-- S_BASIC_5: 基本例文 テスト結果画面 -->
-<div id="s-basic-test-result" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-top')">← ホーム</button>
-  <div class="hd-logo"><span>基本例文 テスト結果</span></div>
-  <button class="hd-home" onclick="go('s-top')">🏠</button>
-</div></header>
-<div class="expl-wrap">
-  <div class="step-card" style="text-align:center;margin-bottom:1rem">
-    <div style="font-size:.88rem;color:var(--ink3)">総合スコア（完答のみ正解）</div>
-    <div id="basic-res-score" style="font-size:1.9rem;font-weight:800;margin:.3rem 0">0 / 20問（0%）</div>
-    <div id="basic-res-breakdown" style="font-size:.84rem;color:var(--ink3)"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1rem">
-      <button class="chip" onclick="retryBasicTest()" style="justify-content:center;padding:.75rem;font-weight:700">🔄 解きなおし</button>
-      <button class="btn-pri" onclick="openBasicExplanation()" style="padding:.75rem">💡 解答解説</button>
-      <button class="chip grn" id="basic-save-btn" onclick="saveBasicTestSet()" style="justify-content:center;padding:.75rem;font-weight:700">📂 問題を保存する</button>
-      <button class="chip" onclick="go('s-top')" style="justify-content:center;padding:.75rem;font-weight:700">🏠 ホーム</button>
-    </div>
-  </div>
-  <div id="basic-res-list"></div>
-</div>
-</div>
-
-<!-- S_BASIC_6: 基本例文 解答解説画面（AI質問バー・翻訳バー付き） -->
-<div id="s-basic-test-exp" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-basic-test-result')">← 結果に戻る</button>
-  <span style="font-weight:700;font-size:.93rem">💡 基本例文 解答解説</span>
-  <button class="hd-home" onclick="go('s-top')">🏠</button>
-</div></header>
-<div class="hint-bar show" style="display:flex">
-  <span style="font-size:.8rem;color:var(--ink2);font-weight:600">🤖 右下のAIボタンで質問・下のバーで翻訳ができます</span>
-  <button class="hint-btn" onclick="toggleBasicTransBar()">🔤 翻訳バーを開く</button>
-</div>
-<div class="trans-bar" id="basic-trans-bar">
-  <div class="trans-row">
-    <input class="trans-inp" id="basic-trans-inp" placeholder="英文または日本語を入力または貼り付け…" />
-    <button class="trans-btn" onclick="doBasicTranslate()">翻訳</button>
-  </div>
-  <div class="trans-result" id="basic-trans-result"></div>
-</div>
-<div class="expl-wrap" style="padding-bottom:5.5rem">
-  <div id="basic-exp-list"></div>
-  <div style="display:flex;justify-content:flex-end;padding-top:.5rem">
-    <button class="btn-pri" onclick="go('s-top')">🏠 ホームへ戻る</button>
-  </div>
-</div>
-</div>
-
-<!-- S_BASIC_7: 基本例文 特訓モード（単元別一覧） -->
-<div id="s-basic-drill" class="scr">
-<header class="hd"><div class="hd-in">
-  <button class="hd-back" onclick="go('s-basic-modesel')">← 戻る</button>
-  <div class="hd-logo"><span id="basic-drill-title">基本例文一覧</span></div>
-  <button class="chip yel" onclick="openBasicCardSetup()" style="font-weight:700">🃏 例文暗記カード</button>
-</div></header>
-<div class="expl-wrap">
-  <div class="step-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem">
-    <div>
-      <div style="font-weight:700;font-size:.95rem" id="basic-drill-sub">文法項目別・基本例文一覧</div>
-      <div style="font-size:.8rem;color:var(--ink3)" id="basic-drill-count"></div>
-    </div>
-    <button class="btn-pri" onclick="openBasicCardSetup()">🃏 例文暗記カードを開く</button>
-  </div>
-  <div id="basic-drill-list"></div>
-</div>
-</div>
-
-
-
 <!-- S21: 保存した問題 -->
 <div id="s-saved" class="scr">
 <header class="hd"><div class="hd-in">
@@ -3496,7 +3338,11 @@ function renderSaved(){
     hd.appendChild(tags);card.appendChild(hd);
     hd.onclick=()=>body.classList.toggle("open");
     const body=document.createElement("div");body.className="si-body";
-    if(item.type==="reading"&&item.qdata){
+    if(item.type==="basic"){
+      const playBtn=document.createElement("button");playBtn.className="chip grn";playBtn.textContent="▶ 解く";
+      playBtn.onclick=e=>{e.stopPropagation();loadSavedBasicTest(item, false);};
+      acts.append(playBtn);
+    }else if(item.type==="reading"&&item.qdata){
       const prev=document.createElement("div");prev.className="si-preview";
       prev.textContent=(item.qdata.passage||"").slice(0,120)+"…";
       body.appendChild(prev);
@@ -3509,7 +3355,11 @@ function renderSaved(){
       body.appendChild(prev);
     }
     const acts=document.createElement("div");acts.className="si-acts";
-    if(item.type==="reading"&&item.qdata){
+    if(item.type==="basic"){
+      const playBtn=document.createElement("button");playBtn.className="chip grn";playBtn.textContent="▶ 解く";
+      playBtn.onclick=e=>{e.stopPropagation();loadSavedBasicTest(item, false);};
+      acts.append(playBtn);
+    }else if(item.type==="reading"&&item.qdata){
       const playBtn=document.createElement("button");playBtn.className="chip grn";playBtn.textContent="▶ 解く";
       playBtn.onclick=e=>{
         e.stopPropagation();
@@ -3588,7 +3438,7 @@ document.addEventListener("click",e2=>{
 // ================================================================
 const AI_BAR_SCREENS = new Set([
   "s-rscore","s-ascore","s-expl","s-expl-sel",
-  "s-wscore","s-redo-sel","s-redo-wrong-start"
+  "s-wscore","s-redo-sel","s-redo-wrong-start","s-basic-score","s-basic-expl"
 ]);
 let aiChatHistory = [];
 
@@ -3610,6 +3460,15 @@ function buildAiContext(){
     ctx += "[Writing Question]\n"+(A.wdata.prompt||"")+"\n\n";
     ctx += "[Sample Answer]\n"+(A.wdata.sampleAnswer||"")+"\n\n";
     ctx += "[Student Answer]\n"+(A.wans||"")+"\n\n";
+  }
+  if(BS.quizQuestions && BS.quizQuestions.length){
+    ctx += "[Basic Sentence Test]\n";
+    BS.quizQuestions.forEach((q,i)=>{
+      ctx += `Q${i+1}[${q.typeLabel}] No.${q.no}: ${q.questionText}\nCorrect: ${q.correct}\nStudent: ${BS.quizAnswers[q.qid]||"(未回答)"}\n`;
+      const res = BS.quizResults.find(r=>r.qid===q.qid);
+      if(res){ ctx += `Note: ${res.note||""} / Advice: ${res.advice||""}\n`; }
+      ctx += "\n";
+    });
   }
   return ctx;
 }
@@ -4091,6 +3950,7 @@ const BS = {
   cardDir: "e2j",
   cardFuan: new Set(),
   quizSentences: [],
+  quizQuestions: [],
   quizAnswers: {},
   quizResults: []
 };
@@ -4142,11 +4002,12 @@ function selectBasicLevel(level){
   if(info)info.textContent=isJunior?"範囲: No.1〜91（中学例文）":"範囲: No.92〜140（高校例文）";
   const cinfo=document.getElementById("basic-card-range-info");
   if(cinfo)cinfo.textContent=isJunior?"範囲: No.1〜91":"範囲: No.92〜140";
-  // デフォルト範囲設定
   const minNo=isJunior?1:92;
   const maxNo=isJunior?91:140;
   ["bq-from","bc-from"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=minNo;});
   ["bq-to","bc-to"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=maxNo;});
+  chkBasicQuiz();
+  chkBasicCard();
   go("s-basic-mode");
 }
 
@@ -4203,7 +4064,7 @@ document.addEventListener("click",function(e){
 });
 
 // ================================================================
-// 暗記カード
+// 暗記カード（片面：例文と例文番号のみ、もう一方の面：例文番号と意味のみ）
 // ================================================================
 function chkBasicCard(){
   const f=parseInt(document.getElementById("bc-from")?.value||"0");
@@ -4224,6 +4085,35 @@ function getAllSentences(level){
   return (BASIC_SENTENCES[level]||[]).flatMap(u=>u.sentences);
 }
 
+function restoreBasicCardAreaUI(){
+  const area=document.getElementById("basic-card-area");
+  if(!area)return;
+  area.innerHTML=`
+    <div class="sent-flash-wrap" id="basic-flash-wrap" onclick="flipBasicCard(event)">
+      <div class="sent-flash-inner" id="basic-flash-inner">
+        <div class="sent-flash-front">
+          <div style="font-size:.82rem;font-weight:700;color:var(--ink3)" id="basic-card-no"></div>
+          <div class="sent-flash-sent" id="basic-card-front"></div>
+        </div>
+        <div class="sent-flash-back">
+          <div style="font-size:.82rem;font-weight:700;color:var(--ink3)" id="basic-card-no-back"></div>
+          <div class="sent-flash-ja" id="basic-card-back"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sent-flash-nav">
+      <button class="chip" id="basic-card-prev" onclick="prevBasicCard()">◀ 前へ</button>
+      <span class="sent-prog" id="basic-card-counter"></span>
+      <button class="chip" id="basic-card-next" onclick="nextBasicCard()">次へ ▶</button>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn-oboeta" onclick="basicCardOboeta()" style="font-size:.9rem;padding:.55rem 1.4rem">覚えた！ ✓</button>
+      <button class="btn-fuan" onclick="basicCardFuan()" style="font-size:.9rem;padding:.55rem 1.4rem">不安… △</button>
+    </div>
+    <div style="font-size:.82rem;color:var(--ink3);text-align:center;margin-top:.25rem" id="basic-card-status"></div>
+  `;
+}
+
 function startBasicCard(){
   const f=parseInt(document.getElementById("bc-from")?.value||"0");
   const t=parseInt(document.getElementById("bc-to")?.value||"0");
@@ -4232,6 +4122,7 @@ function startBasicCard(){
   BS.cardWords=all.filter(s=>s.no>=f&&s.no<=t).sort(()=>Math.random()-.5);
   if(!BS.cardWords.length){alert("指定範囲に例文がありません");return;}
   BS.cardIdx=0;BS.cardFuan=new Set();
+  restoreBasicCardAreaUI();
   renderBasicCard();go("s-basic-card");
   showToast("📚 "+BS.cardWords.length+"文を読み込みました");
 }
@@ -4239,7 +4130,10 @@ function startBasicCard(){
 function renderBasicCard(){
   const s=BS.cardWords[BS.cardIdx];if(!s)return;
   const isE2J=BS.cardDir==="e2j";
-  document.getElementById("basic-card-no").textContent="No."+s.no;
+  const noFront=document.getElementById("basic-card-no");
+  const noBack=document.getElementById("basic-card-no-back");
+  if(noFront)noFront.textContent="No."+s.no;
+  if(noBack)noBack.textContent="No."+s.no;
   document.getElementById("basic-card-front").textContent=isE2J?s.en:s.ja;
   document.getElementById("basic-card-back").textContent=isE2J?s.ja:s.en;
   document.getElementById("basic-card-prog").textContent=(BS.cardIdx+1)+"/"+BS.cardWords.length;
@@ -4248,6 +4142,10 @@ function renderBasicCard(){
   if(fi)fi.classList.remove("flipped");
   const status=document.getElementById("basic-card-status");
   if(status)status.textContent=BS.cardFuan.has(BS.cardIdx)?"🔖 苦手リストに追加済み":"";
+  const prevBtn=document.getElementById("basic-card-prev");
+  const nextBtn=document.getElementById("basic-card-next");
+  if(prevBtn)prevBtn.disabled=BS.cardIdx===0;
+  if(nextBtn)nextBtn.disabled=BS.cardIdx>=BS.cardWords.length-1;
 }
 
 function flipBasicCard(e){
@@ -4292,7 +4190,47 @@ function showBasicCardResult(){
 }
 
 // ================================================================
-// テストモード
+// トークン分割ヘルパー（ピリオド・カンマ・？・！等も独立した選択トークンにする）
+// ================================================================
+function tokenizeSentenceWithPunct(sentence){
+  const rawTokens = sentence.trim().split(/\s+/);
+  const tokens = [];
+  rawTokens.forEach(tok=>{
+    let t = tok;
+    const leadMatch = t.match(/^(['"“(]+)(.+)$/);
+    if(leadMatch){
+      tokens.push(leadMatch[1]);
+      t = leadMatch[2];
+    }
+    const trail = [];
+    while(t.length > 1 && /[.,?!;:'"”)]$/.test(t)){
+      trail.unshift(t.slice(-1));
+      t = t.slice(0, -1);
+    }
+    if(t) tokens.push(t);
+    tokens.push(...trail);
+  });
+  return tokens;
+}
+
+function joinTokensNaturally(tokens){
+  let out = "";
+  tokens.forEach((tok, idx)=>{
+    if(idx === 0){
+      out = tok;
+    } else if(/^[.,?!;:'"”)]$/.test(tok)){
+      out += tok;
+    } else if(/^[('"“]$/.test(tokens[idx-1])){
+      out += tok;
+    } else {
+      out += " " + tok;
+    }
+  });
+  return out;
+}
+
+// ================================================================
+// 基本例文 テストモード
 // ================================================================
 function startBasicQuiz(){
   const f=parseInt(document.getElementById("bq-from")?.value||"0");
@@ -4300,13 +4238,75 @@ function startBasicQuiz(){
   if(!f||!t||t<f){alert("範囲を入力してください");return;}
   const all=getAllSentences(BS.level);
   const pool=all.filter(s=>s.no>=f&&s.no<=t);
-  if(pool.length<2){alert("指定範囲に例文が少なすぎます（最低2文必要）");return;}
-  // 各問題タイプ5問ずつ、指定範囲から必ず使う
-  const shuffled=[...pool].sort(()=>Math.random()-.5);
-  // 最低1回は全例文を使うように並べる
-  BS.quizSentences=shuffled.slice(0,Math.min(5,shuffled.length));
-  BS.quizAnswers={};BS.quizResults=[];
-  renderBasicQuiz();go("s-basic-quiz");
+  if(pool.length<1){alert("指定範囲に例文がありません");return;}
+
+  const qTypes=["order","blank","e2j","j2e"];
+  const qLabels={order:"並べ替え",blank:"空所補充",e2j:"英和訳",j2e:"和英訳"};
+  const perType = Math.min(5, pool.length);
+
+  let bag = [];
+  const refillBag = () => {
+    bag = [...pool].sort(()=>Math.random()-.5);
+  };
+  refillBag();
+
+  BS.quizSentences = [...pool];
+  BS.quizQuestions = [];
+  BS.quizAnswers = {};
+  BS.quizResults = [];
+
+  qTypes.forEach(type=>{
+    for(let i=0; i<perType; i++){
+      if(bag.length === 0) refillBag();
+      const s = bag.shift();
+      const qid = `${type}-${i}`;
+      if(type==="order"){
+        const tokens = tokenizeSentenceWithPunct(s.en);
+        const shuffledTokens = [...tokens].sort(()=>Math.random()-.5);
+        BS.quizQuestions.push({
+          qid, type, typeLabel: qLabels[type], idx: i, no: s.no,
+          en: s.en, ja: s.ja,
+          questionText: `次の語句・記号を並べ替えて正しい英文を作りなさい（意味：${s.ja}）`,
+          shuffledTokens,
+          correct: s.en
+        });
+      } else if(type==="blank"){
+        const words = s.en.split(/\s+/);
+        const candIndices = words.map((w,idx)=>({w,idx})).filter(x=>/[A-Za-z]/.test(x.w));
+        const picked = candIndices.length ? candIndices[Math.floor(Math.random()*candIndices.length)] : {w:words[0], idx:0};
+        const m = picked.w.match(/^(['"“(]*)([A-Za-z'-]+)([.,?!;:'"”)]*)$/);
+        const lead = m ? m[1] : "";
+        const coreWord = m ? m[2] : picked.w.replace(/[.,?!]/g,"");
+        const trail = m ? m[3] : "";
+        const displayed = words.map((w,idx)=> idx===picked.idx ? `${lead}(     )${trail}` : w).join(" ");
+        BS.quizQuestions.push({
+          qid, type, typeLabel: qLabels[type], idx: i, no: s.no,
+          en: s.en, ja: s.ja,
+          questionText: displayed,
+          correct: coreWord
+        });
+      } else if(type==="e2j"){
+        BS.quizQuestions.push({
+          qid, type, typeLabel: qLabels[type], idx: i, no: s.no,
+          en: s.en, ja: s.ja,
+          questionText: s.en,
+          correct: s.ja
+        });
+      } else {
+        BS.quizQuestions.push({
+          qid, type, typeLabel: qLabels[type], idx: i, no: s.no,
+          en: s.en, ja: s.ja,
+          questionText: s.ja,
+          correct: s.en
+        });
+      }
+    }
+  });
+
+  const btn=document.getElementById("btn-basic-submit");
+  if(btn){btn.disabled=false;btn.textContent="解答を提出 ▶";}
+  renderBasicQuiz();
+  go("s-basic-quiz");
 }
 
 function renderBasicQuiz(){
@@ -4314,77 +4314,116 @@ function renderBasicQuiz(){
   if(!area)return;
   area.innerHTML="";
   const prog=document.getElementById("basic-quiz-prog");
-  if(prog)prog.textContent=BS.quizSentences.length+"文を使ったテスト（並べ替え・空所補充・英和・和英）";
+  if(prog)prog.textContent=`全${BS.quizQuestions.length}問（並べ替え・空所補充・英和・和英）`;
 
-  // 4種類の問題を作成
   const qTypes=["order","blank","e2j","j2e"];
-  const qTitles={order:"🔀 並べ替え問題",blank:"□ 空所補充問題",e2j:"📖 英和問題",j2e:"✏️ 和英問題"};
+  const qTitles={order:"🔀 並べ替え問題（ピリオド・カンマ・？等も選択）",blank:"□ 空所補充問題",e2j:"📖 英和問題",j2e:"✏️ 和英問題"};
 
   qTypes.forEach(type=>{
+    const list = BS.quizQuestions.filter(q=>q.type===type);
+    if(!list.length) return;
     const sec=document.createElement("div");sec.style.cssText="margin-bottom:1.5rem";
     const hd=document.createElement("div");
     hd.style.cssText="font-weight:700;font-size:.9rem;padding:.4rem .75rem;background:var(--accl);border-radius:var(--r);margin-bottom:.75rem;color:var(--acc)";
     hd.textContent=qTitles[type];
     sec.appendChild(hd);
 
-    BS.quizSentences.forEach((s,i)=>{
-      const qid=type+"-"+i;
+    list.forEach((qObj,i)=>{
+      const qid=qObj.qid;
       const card=document.createElement("div");
       card.style.cssText="background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.75rem";
       const qno=document.createElement("div");
       qno.style.cssText="font-size:.75rem;color:var(--ink3);margin-bottom:.35rem";
-      qno.textContent="問"+(i+1)+" — No."+s.no;
+      qno.textContent="問"+(i+1)+" — No."+qObj.no;
       card.appendChild(qno);
 
       if(type==="order"){
-        // 並べ替え
-        const words=s.en.replace(/[.,!?]/g,"").split(" ").sort(()=>Math.random()-.5);
         const q=document.createElement("div");
         q.style.cssText="font-size:.85rem;color:var(--ink2);margin-bottom:.5rem";
-        q.textContent="次の語句を並べ替えて正しい英文を作りなさい：";
+        q.textContent=qObj.questionText;
+
+        const selectedTokens = [];
         const chips=document.createElement("div");
-        chips.style.cssText="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.5rem;padding:.5rem;background:var(--surf);border-radius:var(--r)";
-        words.forEach(w=>{const sp=document.createElement("span");sp.style.cssText="background:var(--accl);border:1px solid #c5d5f8;border-radius:4px;padding:.2rem .5rem;font-size:.88rem;cursor:pointer;color:var(--acc)";sp.textContent=w;chips.appendChild(sp);});
+        chips.style.cssText="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem;padding:.6rem;background:var(--surf);border-radius:var(--r)";
+
         const inp=document.createElement("textarea");
-        inp.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.5rem;font-size:.88rem;resize:none;height:60px;font-family:var(--fm)";
-        inp.placeholder="並べ替えた英文を入力…";
-        inp.oninput=()=>{BS.quizAnswers[qid]=inp.value.trim();};
-        // 語をタップで入力
-        chips.querySelectorAll("span").forEach(sp=>{
-          sp.onclick=()=>{inp.value+=(inp.value?" ":"")+sp.textContent;BS.quizAnswers[qid]=inp.value.trim();};
+        inp.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.5rem;font-size:.9rem;resize:none;height:62px;font-family:var(--fe)";
+        inp.placeholder="上の語句・記号ボタンをタップするか、直接入力してください…";
+
+        const ctrlRow=document.createElement("div");
+        ctrlRow.style.cssText="display:flex;gap:.4rem;justify-content:flex-end;margin-top:.35rem";
+        const undoBtn=document.createElement("button");
+        undoBtn.type="button";
+        undoBtn.className="gram-mini-btn";
+        undoBtn.textContent="⌫ 1つ戻す";
+        const clearBtn=document.createElement("button");
+        clearBtn.type="button";
+        clearBtn.className="gram-mini-btn";
+        clearBtn.textContent="🗑 クリア";
+
+        qObj.shuffledTokens.forEach((tok)=>{
+          const sp=document.createElement("button");
+          sp.type="button";
+          const isPunct = /^[.,?!;:'"”()—]$/.test(tok);
+          sp.style.cssText = isPunct
+            ? "background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:.25rem .6rem;font-size:.92rem;font-weight:700;cursor:pointer;color:#b45309;font-family:var(--fe)"
+            : "background:var(--accl);border:1.5px solid #c5d5f8;border-radius:6px;padding:.25rem .6rem;font-size:.9rem;font-weight:600;cursor:pointer;color:var(--acc);font-family:var(--fe)";
+          sp.textContent=tok;
+          sp.onclick=()=>{
+            if(sp.disabled) return;
+            sp.disabled=true;
+            sp.style.opacity="0.35";
+            selectedTokens.push({tok, btn:sp});
+            inp.value = joinTokensNaturally(selectedTokens.map(x=>x.tok));
+            BS.quizAnswers[qid] = inp.value.trim();
+          };
+          chips.appendChild(sp);
         });
-        card.append(q,chips,inp);
+
+        undoBtn.onclick=()=>{
+          const last = selectedTokens.pop();
+          if(last){
+            last.btn.disabled=false;
+            last.btn.style.opacity="1";
+            inp.value = joinTokensNaturally(selectedTokens.map(x=>x.tok));
+            BS.quizAnswers[qid] = inp.value.trim();
+          }
+        };
+        clearBtn.onclick=()=>{
+          while(selectedTokens.length){
+            const item = selectedTokens.pop();
+            item.btn.disabled=false;
+            item.btn.style.opacity="1";
+          }
+          inp.value="";
+          BS.quizAnswers[qid]="";
+        };
+        inp.oninput=()=>{BS.quizAnswers[qid]=inp.value.trim();};
+        ctrlRow.append(undoBtn, clearBtn);
+        card.append(q,chips,inp,ctrlRow);
       } else if(type==="blank"){
-        // 空所補充：ランダムな単語を___に
-        const words2=s.en.split(" ");
-        const blankIdx=Math.floor(Math.random()*words2.length);
-        const answer=words2[blankIdx].replace(/[.,!?]/g,"");
-        const displayed=words2.map((w,i)=>i===blankIdx?"___":w).join(" ");
-        const q2=document.createElement("div");q2.style.cssText="font-size:.93rem;line-height:1.65;margin-bottom:.5rem;color:var(--ink)";
-        q2.textContent=displayed;
-        const q2ja=document.createElement("div");q2ja.style.cssText="font-size:.8rem;color:var(--ink2);margin-bottom:.5rem";
-        q2ja.textContent=s.ja;
+        const q2=document.createElement("div");q2.style.cssText="font-size:.95rem;line-height:1.65;margin-bottom:.4rem;color:var(--ink);font-family:var(--fe)";
+        q2.textContent=qObj.questionText;
+        const q2ja=document.createElement("div");q2ja.style.cssText="font-size:.82rem;color:var(--ink2);margin-bottom:.5rem";
+        q2ja.textContent=qObj.ja;
         const inp2=document.createElement("input");
-        inp2.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.45rem .75rem;font-size:.93rem;font-family:var(--fm)";
-        inp2.placeholder="___に入る語を入力…";
-        inp2.dataset.answer=answer;
+        inp2.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.45rem .75rem;font-size:.93rem;font-family:var(--fe)";
+        inp2.placeholder="(     ) に入る語を入力…";
         inp2.oninput=()=>{BS.quizAnswers[qid]=inp2.value.trim();};
         card.append(q2,q2ja,inp2);
       } else if(type==="e2j"){
-        // 英和
-        const q3=document.createElement("div");q3.style.cssText="font-size:.93rem;line-height:1.65;margin-bottom:.5rem;color:var(--ink)";
-        q3.textContent=s.en;
+        const q3=document.createElement("div");q3.style.cssText="font-size:.95rem;line-height:1.65;margin-bottom:.5rem;color:var(--ink);font-family:var(--fe)";
+        q3.textContent=qObj.questionText;
         const inp3=document.createElement("textarea");
-        inp3.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.5rem;font-size:.88rem;resize:none;height:70px;font-family:var(--fm)";
+        inp3.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.5rem;font-size:.88rem;resize:none;height:70px;font-family:var(--fu)";
         inp3.placeholder="日本語訳を記入…";
         inp3.oninput=()=>{BS.quizAnswers[qid]=inp3.value.trim();};
         card.append(q3,inp3);
       } else {
-        // 和英
         const q4=document.createElement("div");q4.style.cssText="font-size:.93rem;line-height:1.65;margin-bottom:.5rem;color:var(--ink)";
-        q4.textContent=s.ja;
+        q4.textContent=qObj.questionText;
         const inp4=document.createElement("textarea");
-        inp4.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.5rem;font-size:.88rem;resize:none;height:70px;font-family:var(--fm)";
+        inp4.style.cssText="width:100%;border:1.5px solid var(--rule);border-radius:var(--r);padding:.5rem;font-size:.9rem;resize:none;height:70px;font-family:var(--fe)";
         inp4.placeholder="英文を記入…";
         inp4.oninput=()=>{BS.quizAnswers[qid]=inp4.value.trim();};
         card.append(q4,inp4);
@@ -4398,41 +4437,47 @@ function renderBasicQuiz(){
 async function submitBasicQuiz(){
   const btn=document.getElementById("btn-basic-submit");
   if(btn){btn.disabled=true;btn.textContent="採点中…";}
-  // AI採点
-  const qTypes=["order","blank","e2j","j2e"];
-  const qLabels={order:"並べ替え",blank:"空所補充",e2j:"英和訳",j2e:"和英訳"};
-  const items=[];
-  qTypes.forEach(type=>{
-    BS.quizSentences.forEach((s,i)=>{
-      const qid=type+"-"+i;
-      const ans=BS.quizAnswers[qid]||"（未回答）";
-      let question="",correct="";
-      if(type==="order"){question="並べ替え: "+s.en.replace(/[.,!?]/g,"").split(" ").sort(()=>0.5-Math.random()).join(" ");correct=s.en;}
-      else if(type==="blank"){correct="（文中の空欄の語）";}
-      else if(type==="e2j"){question=s.en;correct=s.ja;}
-      else{question=s.ja;correct=s.en;}
-      items.push({qid,type:qLabels[type],no:s.no,question:question||s.en,correct,answer:ans});
-    });
-  });
+
+  const items = BS.quizQuestions.map(qObj=>({
+    qid: qObj.qid,
+    type: qObj.typeLabel,
+    no: qObj.no,
+    question: qObj.questionText,
+    correct: qObj.correct,
+    fullEn: qObj.en,
+    fullJa: qObj.ja,
+    answer: (BS.quizAnswers[qObj.qid]||"").trim() || "（未回答）"
+  }));
+
   const prompt=[
-    "You are a strict English sentence test scorer for Japanese students.",
-    "Score each answer:",
-    "- 並べ替え: CORRECT only if the word order exactly matches (ignore punctuation differences). WRONG if any word is out of place.",
-    "- 空所補充: CORRECT if the answer matches the missing word (ignore case, minor spelling ok).",
-    "- 英和訳: CORRECT if the meaning is correct, even if phrased differently.",
-    "- 和英訳: CORRECT if the English is grammatically correct and means the same thing.",
+    "あなたは日本の中高生向け『基本例文テスト』のAI採点者です。",
+    "以下の【採点基準（緩和ルール）】に厳密に従って採点してください。",
     "",
-    items.map((it,i)=>`Q${i+1}[${it.type}] No.${it.no}: Correct="${it.correct}" | Student="${it.answer}"`).join("\n"),
+    "【採点基準（緩和ルール）】",
+    "・原則として『概ね文法的・意味的に合っていれば 〇（correct: true）』とする（採点基準を緩和）。",
+    "・空欄や全く意味が通じない・文法的に大きく破綻している場合のみ ×（correct: false）とする。",
+    "・並べ替え問題：語順が概ね正しく文が成立していれば 〇。大文字・小文字や軽微な句読点の有無・表記揺れは許容して 〇 にする。",
+    "・空所補充問題：文脈・文法に合う正しい語（または許容される活用形・同義語）が入っていれば 〇。",
+    "・英和訳問題：模範解答と表現・語尾・漢字ひらがなが異なっていても、大意が合っていれば 〇。",
+    "・和英訳問題：模範解答と異なる構文・単語（例：will と be going to、big と large、短縮形の有無など）でも、文法的に概ね正しく同じ意味を表していれば 〇。",
+    "・判断に迷った場合は必ず 〇（correct: true）にする。",
     "",
-    'Output ONLY JSON: {"results":[{"qid":"...","correct":true,"note":"一言コメント（日本語）"}]}'
+    "【各問の判定とともに必ず出力する項目】",
+    "- note: 採点理由（日本語1〜2文）",
+    "- advice: AIからのワンポイントアドバイス（文法・表現のコツ、より自然な言い回し、覚え方などを日本語1〜2文で親身にアドバイス）",
+    "",
+    items.map((it,i)=>`Q${i+1} [qid:${it.qid}] [${it.type}] No.${it.no} | 問題: ${it.question} | 模範解答: "${it.correct}" (全文: "${it.fullEn}" / "${it.fullJa}") | 回答者の回答: "${it.answer}"`).join("\n"),
+    "",
+    'JSONのみ出力: {"results":[{"qid":"order-0","correct":true,"note":"採点理由","advice":"AIからのアドバイス"},...]}'
   ].join("\n");
 
   try{
-    const d=await callAI(prompt,2000);
+    const d=await callAI(prompt,2500);
     const results=d.results||[];
     BS.quizResults=results;
     renderBasicScore(results);
     go("s-basic-score");
+    if(btn){btn.disabled=false;btn.textContent="解答を提出 ▶";}
   }catch(e){
     if(btn){btn.disabled=false;btn.textContent="解答を提出 ▶";}
     alert("採点エラー: "+e.message);
@@ -4440,8 +4485,11 @@ async function submitBasicQuiz(){
 }
 
 function renderBasicScore(results){
-  const cor=results.filter(r=>r.correct).length;
-  const total=results.length;
+  const total=BS.quizQuestions.length;
+  const cor=BS.quizQuestions.filter(qObj=>{
+    const r=results.find(x=>x.qid===qObj.qid);
+    return r && r.correct;
+  }).length;
   const pct=total?Math.round((cor/total)*100):0;
   document.getElementById("basic-sc-num").textContent=cor+"/"+total;
   document.getElementById("basic-sc-pct").textContent=pct+"%";
@@ -4452,21 +4500,52 @@ function renderBasicScore(results){
     document.getElementById("basic-sc-pct").style.color=col;
   },100);
   setTimeout(()=>launchConfetti(pct),600);
+
   const cards=document.getElementById("basic-score-cards");
   cards.innerHTML="";
-  const qTypes=["order","blank","e2j","j2e"];
-  const qLabels={order:"並べ替え",blank:"空所補充",e2j:"英和訳",j2e:"和英訳"};
-  results.forEach(r=>{
+
+  BS.quizQuestions.forEach((qObj, idx)=>{
+    const r=results.find(x=>x.qid===qObj.qid)||{correct:false,note:"",advice:""};
+    const userAns=(BS.quizAnswers[qObj.qid]||"").trim()||"（未回答）";
+
     const card=document.createElement("div");
-    card.style.cssText="background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:.75rem 1rem;border-left:4px solid "+(r.correct?"var(--ok)":"var(--ng)");
-    const hd=document.createElement("div");hd.style.cssText="display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink2);margin-bottom:.35rem";
-    const type=r.qid.split("-")[0];
-    hd.innerHTML="<span>"+qLabels[type]+" — No."+r.qid.split("-")[1]+"</span><strong style='color:"+(r.correct?"var(--ok)":"var(--ng)")+"'>"+(r.correct?"✓ 正解":"✗ 不正解")+"</strong>";
-    const ans=document.createElement("div");ans.style.cssText="font-size:.85rem;color:var(--ink)";
-    ans.textContent="解答: "+(BS.quizAnswers[r.qid]||"（未回答）");
-    const note=document.createElement("div");note.style.cssText="font-size:.8rem;color:var(--ink3);margin-top:.2rem";
-    if(r.note)note.textContent=r.note;
-    card.append(hd,ans,note);cards.appendChild(card);
+    card.style.cssText="background:#fff;border:1px solid var(--rule);border-radius:var(--rl);box-shadow:var(--sh);padding:.95rem 1.1rem;border-left:5px solid "+(r.correct?"var(--ok)":"var(--ng)");
+
+    const hd=document.createElement("div");
+    hd.style.cssText="display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:var(--ink2);margin-bottom:.45rem;padding-bottom:.35rem;border-bottom:1px solid var(--rule)";
+    hd.innerHTML=`<span><strong>問${idx+1}</strong>［${esc(qObj.typeLabel)}］— No.${qObj.no}</span><span style="font-weight:800;font-size:.9rem;padding:.15rem .6rem;border-radius:12px;background:${r.correct?"var(--okl)":"var(--ngl)"};color:${r.correct?"var(--ok)":"var(--ng)"}">${r.correct?"〇 正解":"× 不正解"}</span>`;
+
+    const qDisp=document.createElement("div");
+    qDisp.style.cssText="font-size:.83rem;color:var(--ink3);margin-bottom:.5rem";
+    qDisp.textContent="問題："+qObj.questionText;
+
+    const ansBox=document.createElement("div");
+    ansBox.style.cssText="display:flex;flex-direction:column;gap:.35rem;background:var(--surf);border-radius:var(--r);padding:.65rem .85rem;margin-bottom:.5rem;font-size:.88rem";
+
+    const userRow=document.createElement("div");
+    userRow.innerHTML=`<span style="color:var(--ink2);font-weight:600">あなたの回答：</span><strong style="color:${r.correct?"var(--ok)":"var(--ng)"};font-family:var(--fe)">${esc(userAns)}</strong>`;
+
+    const modelRow=document.createElement("div");
+    modelRow.innerHTML=`<span style="color:var(--ink2);font-weight:600">模範解答：</span><strong style="color:var(--ok);font-family:var(--fe)">${esc(qObj.correct)}</strong>`;
+
+    ansBox.append(userRow, modelRow);
+
+    if(r.note){
+      const note=document.createElement("div");
+      note.style.cssText="font-size:.83rem;color:var(--ink2);margin-bottom:.4rem";
+      note.textContent="💬 判定理由："+r.note;
+      card.append(hd, qDisp, ansBox, note);
+    } else {
+      card.append(hd, qDisp, ansBox);
+    }
+
+    const adviceText = r.advice || (r.correct ? "この調子で例文全体の語順や表現も声に出して定着させましょう！" : "模範解答の語順と文法構造を確認し、声に出して何度か書いてみましょう。");
+    const adv=document.createElement("div");
+    adv.style.cssText="font-size:.83rem;color:var(--acc);background:var(--accl);border-radius:var(--r);padding:.5rem .8rem;border-left:3px solid var(--acc);line-height:1.55";
+    adv.innerHTML=`🤖 <strong>AIからのアドバイス：</strong>${esc(adviceText)}`;
+    card.appendChild(adv);
+
+    cards.appendChild(card);
   });
 }
 
@@ -4477,23 +4556,36 @@ function showBasicExpl(){
   const qTypes=["order","blank","e2j","j2e"];
   const qLabels={order:"🔀 並べ替え",blank:"□ 空所補充",e2j:"📖 英和訳",j2e:"✏️ 和英訳"};
   qTypes.forEach(type=>{
+    const qs = BS.quizQuestions.filter(q=>q.type===type);
+    if(!qs.length) return;
     const sec=document.createElement("div");
     const hd=document.createElement("div");
     hd.style.cssText="font-weight:700;font-size:.9rem;padding:.4rem .75rem;background:var(--accl);border-radius:var(--r);margin-bottom:.5rem;color:var(--acc)";
     hd.textContent=qLabels[type];sec.appendChild(hd);
-    BS.quizSentences.forEach((s,i)=>{
-      const qid=type+"-"+i;
-      const r=BS.quizResults.find(x=>x.qid===qid)||{correct:false,note:""};
+    qs.forEach(qObj=>{
+      const qid=qObj.qid;
+      const r=BS.quizResults.find(x=>x.qid===qid)||{correct:false,note:"",advice:""};
       const card=document.createElement("div");
-      card.style.cssText="background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:.85rem 1rem;border-left:4px solid "+(r.correct?"var(--ok)":"var(--ng)");
-      const no=document.createElement("div");no.style.cssText="font-size:.72rem;color:var(--ink3);margin-bottom:.25rem";no.textContent="No."+s.no+" — "+(r.correct?"✓ 正解":"✗ 不正解");
-      const en=document.createElement("div");en.style.cssText="font-size:.93rem;line-height:1.65;margin-bottom:.25rem";en.textContent=s.en;
-      const ja=document.createElement("div");ja.style.cssText="font-size:.85rem;color:var(--ink2);margin-bottom:.35rem";ja.textContent=s.ja;
-      const your=document.createElement("div");your.style.cssText="font-size:.82rem;color:var(--ink3)";
-      your.textContent="あなたの解答: "+(BS.quizAnswers[qid]||"（未回答）");
-      const note=document.createElement("div");note.style.cssText="font-size:.82rem;color:var(--ink3);margin-top:.2rem;font-style:italic";
-      if(r.note)note.textContent=r.note;
-      card.append(no,en,ja,your,note);sec.appendChild(card);
+      card.style.cssText="background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.6rem;border-left:4px solid "+(r.correct?"var(--ok)":"var(--ng)");
+      const no=document.createElement("div");no.style.cssText="font-size:.75rem;color:var(--ink3);margin-bottom:.25rem;font-weight:700";no.textContent="No."+qObj.no+" — "+(r.correct?"〇 正解":"× 不正解");
+      const en=document.createElement("div");en.style.cssText="font-size:.95rem;line-height:1.65;margin-bottom:.2rem;font-family:var(--fe);font-weight:600";en.textContent=qObj.en;
+      const ja=document.createElement("div");ja.style.cssText="font-size:.85rem;color:var(--ink2);margin-bottom:.45rem";ja.textContent=qObj.ja;
+      const your=document.createElement("div");your.style.cssText="font-size:.84rem;color:var(--ink);margin-bottom:.2rem";
+      your.innerHTML=`あなたの回答：<strong style="color:${r.correct?"var(--ok)":"var(--ng)"}">${esc(BS.quizAnswers[qid]||"（未回答）")}</strong>`;
+      const model=document.createElement("div");model.style.cssText="font-size:.84rem;color:var(--ink);margin-bottom:.35rem";
+      model.innerHTML=`模範解答：<strong style="color:var(--ok)">${esc(qObj.correct)}</strong>`;
+      card.append(no,en,ja,your,model);
+      if(r.note){
+        const note=document.createElement("div");note.style.cssText="font-size:.82rem;color:var(--ink2);margin-bottom:.3rem";
+        note.textContent="💬 "+r.note;
+        card.appendChild(note);
+      }
+      if(r.advice){
+        const adv=document.createElement("div");adv.style.cssText="font-size:.82rem;color:var(--acc);background:var(--accl);border-radius:var(--r);padding:.4rem .7rem;border-left:3px solid var(--acc)";
+        adv.textContent="🤖 AIアドバイス："+r.advice;
+        card.appendChild(adv);
+      }
+      sec.appendChild(card);
     });
     list.appendChild(sec);
   });
@@ -4509,18 +4601,11 @@ function saveBasicQuiz(){
   const cor=BS.quizResults.filter(r=>r.correct).length;
   saved.unshift({
     id:Date.now(),type:"basic",savedAt:new Date().toLocaleString("ja-JP"),
-    level:BS.level,score:{correct:cor,total:BS.quizResults.length},
+    level:BS.level,score:{correct:cor,total:BS.quizQuestions.length},
     label:"基本例文テスト（"+(BS.level==="junior"?"中学":"高校")+"）"
   });
   setSaved(saved.slice(0,50));showToast("📂 保存しました！");
 }
-
-
-
-
-
-
-
 
 // ================================================================
 // 品詞判定（英文法8品詞基準・日本語の意味から全品詞を列挙）
@@ -4794,16 +4879,15 @@ function getAllPOSStr(meaning){
   <button class="hd-home" onclick="go('s-top')">🏠</button>
 </div></header>
 <div class="card-area" id="basic-card-area">
-  <div class="sent-flash-wrap" id="basic-flash-wrap">
+  <div class="sent-flash-wrap" id="basic-flash-wrap" onclick="flipBasicCard(event)">
     <div class="sent-flash-inner" id="basic-flash-inner">
       <div class="sent-flash-front">
-        <div style="font-size:.75rem;color:var(--ink3);margin-bottom:.25rem" id="basic-card-no"></div>
+        <div style="font-size:.82rem;font-weight:700;color:var(--ink3)" id="basic-card-no"></div>
         <div class="sent-flash-sent" id="basic-card-front"></div>
-        <div class="sent-flash-hint">タップして裏返す</div>
       </div>
       <div class="sent-flash-back">
+        <div style="font-size:.82rem;font-weight:700;color:var(--ink3)" id="basic-card-no-back"></div>
         <div class="sent-flash-ja" id="basic-card-back"></div>
-        <div class="sent-flash-hint">もう一度タップで表に戻る</div>
       </div>
     </div>
   </div>
