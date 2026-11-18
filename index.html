@@ -1877,33 +1877,90 @@ function chkSent(){
 // ================================================================
 // API CALL
 // ================================================================
-async function callAI(prompt, maxTokens=4000, retries=2){
+async function callAI(prompt, maxTokens=4096, retries=2){
+  let useJsonMode = true;
   for(let attempt=0; attempt<=retries; attempt++){
     try{
-      const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
-        method:"POST",
-        headers:{"Content-Type":"application/json","Authorization":"Bearer "+A.key},
-        body:JSON.stringify({
-          model:"openai/gpt-oss-20b",
-          max_tokens:maxTokens,
-          response_format:{type:"json_object"},
-          messages:[
-            {role:"system",content:"You are a JSON generator. Output ONLY valid JSON. No markdown, no code blocks, no extra text."},
-            {role:"user",content:prompt}
-          ]
-        })
+      const bodyObj = {
+        model: "openai/gpt-oss-20b",
+        max_tokens: Math.max(maxTokens, 4096),
+        temperature: 0.7,
+        messages: [
+          {role: "system", content: "You are a strict JSON generator. Output ONLY a single valid RFC 8259 JSON object. Properly escape all double quotes (\\\") and newlines (\\n) inside JSON string values. Do NOT output markdown code blocks or trailing text."},
+          {role: "user", content: prompt}
+        ]
+      };
+      if(useJsonMode){
+        bodyObj.response_format = {type: "json_object"};
+      }
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": "Bearer " + A.key},
+        body: JSON.stringify(bodyObj)
       });
-      if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||"APIエラー "+res.status)}
-      const d=await res.json();
-      let raw=d.choices?.[0]?.message?.content||"";
-      raw=raw.replace(/```[\w]*\n?/g,"").replace(/\n?```/g,"").trim();
-      const st=raw.indexOf("{"),en=raw.lastIndexOf("}");
-      if(st!==-1&&en>st) raw=raw.slice(st,en+1);
-      return JSON.parse(raw);
+      if(!res.ok){
+        const e = await res.json().catch(()=>({}));
+        const errMsg = e?.error?.message || ("APIエラー " + res.status);
+        // Groqのjson_validate_failed時はfailed_generationを救済するか、JSONモードを解除して再試行
+        if(e?.error?.code === "json_validate_failed" || /Failed to validate JSON/i.test(errMsg)){
+          const failedGen = e?.error?.failed_generation;
+          if(failedGen){
+            try{
+              return extractAndParseJSON(failedGen);
+            }catch(_){}
+          }
+          useJsonMode = false;
+        }
+        throw new Error(errMsg);
+      }
+      const d = await res.json();
+      const raw = d.choices?.[0]?.message?.content || "";
+      return extractAndParseJSON(raw);
     }catch(err){
-      if(attempt===retries) throw err;
-      await new Promise(r=>setTimeout(r,1500));
+      if(attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, 1200));
     }
+  }
+}
+
+function extractAndParseJSON(raw){
+  let s = String(raw || "").trim();
+  s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  const st = s.indexOf("{"), en = s.lastIndexOf("}");
+  if(st !== -1 && en > st) s = s.slice(st, en + 1);
+  try{
+    return JSON.parse(s);
+  }catch(_){
+    // 文字列値内の未エスケープ改行・制御文字を補正して再パース
+    let fixed = "";
+    let inStr = false;
+    let escNext = false;
+    for(let i = 0; i < s.length; i++){
+      const ch = s[i];
+      if(escNext){
+        fixed += ch;
+        escNext = false;
+        continue;
+      }
+      if(ch === "\\"){
+        fixed += ch;
+        escNext = true;
+        continue;
+      }
+      if(ch === '"'){
+        inStr = !inStr;
+        fixed += ch;
+        continue;
+      }
+      if(inStr){
+        if(ch === "\n"){ fixed += "\\n"; continue; }
+        if(ch === "\r"){ continue; }
+        if(ch === "\t"){ fixed += "\\t"; continue; }
+      }
+      fixed += ch;
+    }
+    fixed = fixed.replace(/,\s*([}\]])/g, "$1");
+    return JSON.parse(fixed);
   }
 }
 
@@ -1944,7 +2001,8 @@ function buildRPrompt(){
     "",
     A.rMode==="kunshu" ? "IMPORTANT: Since this is TRAINING MODE, include a 'hints' field: an array of hint objects, one per paragraph. Each hint must include: (1) 'point': the main reading point of the paragraph in Japanese (2-3 sentences), (2) 'structure': key grammar/syntax to notice in Japanese (1-2 sentences), (3) 'keywords': array of {word, meaning} for important words in that paragraph." : "",
     "",
-    "Output ONLY a JSON object:",
+    "IMPORTANT JSON RULES: Escape any double quotes inside strings as \\\" and use single quotes ' for dialogue/quotations inside text. Do not use literal newlines inside strings.",
+    "Output ONLY a single valid JSON object:",
     JSON.stringify({
       targetMinutes:10,
       passage:"English passage",
@@ -2018,7 +2076,8 @@ function buildWPrompt(){
     "- Include a 'grammarPoints' array of Japanese strings summarizing the target grammar/expressions for this question (shown right below the prompt).",
     "- Ensure 'sampleAnswer' strictly satisfies ALL specified grammar conditions, ALL required/annotated words, and the exact word count rule.",
     "",
-    "Output ONLY a JSON object:",
+    "IMPORTANT JSON RULES: Escape any double quotes inside strings as \\\" and use single quotes ' for dialogue/quotations inside text. Do not use literal newlines inside strings.",
+    "Output ONLY a single valid JSON object:",
     JSON.stringify({
       targetMinutes:10,
       prompt:"Question text",
@@ -2053,7 +2112,8 @@ function buildSPrompt(ua){
     "Check carefully whether the student fulfilled ALL specified grammar conditions and required/annotated vocabulary conditions.",
     "Write all comments, reasons, and feedback in natural JAPANESE.",
     "",
-    "Output ONLY a JSON object:",
+    "IMPORTANT JSON RULES: Escape any double quotes inside strings as \\\" and use single quotes ' for dialogue/quotations inside text. Do not use literal newlines inside strings.",
+    "Output ONLY a single valid JSON object:",
     JSON.stringify({
       totalScore:85,maxScore:100,
       breakdown:{
@@ -2152,7 +2212,8 @@ function buildSentPrompt(words){
     "- Keep sentences simple and appropriate for junior/senior high school level",
     "- Provide Japanese translation for each sentence",
     "",
-    "Output ONLY a JSON object:",
+    "IMPORTANT JSON RULES: Escape any double quotes inside strings as \\\" and use single quotes ' for dialogue/quotations inside text. Do not use literal newlines inside strings.",
+    "Output ONLY a single valid JSON object:",
     JSON.stringify({sentences:words.map(w=>({word:w.word,sentence:`Example sentence using ${w.word}.`,sentenceJa:"例文の日本語訳"}))})
   ].join("\n");
 }
@@ -2174,7 +2235,7 @@ $("btn-rgen").onclick=async()=>{
   if(!A.key){alert("APIキーが設定されていません");return}
   $("gen-msg").textContent="AIが読解問題を作成中…";go("s-gen");
   try{
-    const d=await callAI(buildRPrompt());
+    const d=await callAI(buildRPrompt(),6000);
     A.qdata=d;A.uans={};A.wrong=[];A.redoIds=null;
     const genre=GJ[A.r.genre]||"";const diff=A.r.difficulty.toUpperCase();
     $("rs-badge").textContent=genre+" ／ "+diff+(A.rMode==="kunshu"?" ／ 💡特訓":"");
@@ -2204,7 +2265,7 @@ $("btn-wgen").onclick=async()=>{
   A.w.wordCount=wc;
   $("gen-msg").textContent="AIが英作文問題を作成中…";go("s-gen");
   try{
-    const d=await callAI(buildWPrompt(),2000);
+    const d=await callAI(buildWPrompt(),4096);
     A.wdata=d;A.wans="";
     $("ws-badge").textContent=(WTYPE_JP[A.w.wtype]||"英作文")+" ／ "+(RJ[A.w.wordRule]||RJ.around)(A.w.wordCount)+(A.wMode==="kunshu"?" ／ 💡特訓":"");
     $("ws-min").textContent=d.targetMinutes||10;
@@ -2614,7 +2675,7 @@ $("btn-a-expl2").onclick=()=>{renderExpl(false);go("s-expl")};
 $("w-fin").onclick=async()=>{
   clearInterval(A.tiv);A.wans=$("w-ta").value;
   $("w-elapsed").textContent=fmt(A.eSec);go("s-wscoring");
-  try{const d=await callAI(buildSPrompt(A.wans),2000);renderWScore(d);go("s-wscore")}
+  try{const d=await callAI(buildSPrompt(A.wans),4096);renderWScore(d);go("s-wscore")}
   catch(e){go("s-wquiz");alert("採点エラー: "+e.message)}
 };
 
@@ -2721,7 +2782,7 @@ async function finishVTest(){
   A.vtestAnswers[A.vtestWords.length-1]=$("vtest-inp-"+(A.vtestWords.length-1))?.value.trim()||"";
   go("s-vscoring");
   try{
-    const d=await callAI(buildVocabScorePrompt(A.vtestWords,Object.values(A.vtestAnswers)),2000);
+    const d=await callAI(buildVocabScorePrompt(A.vtestWords,Object.values(A.vtestAnswers)),4096);
     const results=d.results||[];
     let cor=0;const wrongWords=[];
     results.forEach((r,i)=>{
@@ -2954,7 +3015,7 @@ async function startSentGenerate(){
   A.sentWords=words.map(w=>({...w,word:w.w||w.word||"",meaning:w.m||w.meaning||""}));
   go("s-gen");document.getElementById("gen-msg").textContent="AIが例文を作成中…";
   try{
-    const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);
+    const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),4096);
     A.sentData=d;A.sentCardIdx=0;renderSent();go("s-sent");
   }catch(e){
     go("s-sent-set");alert("エラー: "+e.message);
@@ -2963,7 +3024,7 @@ async function startSentGenerate(){
 $("btn-sent-new").onclick=async()=>{
   go("s-gen");document.getElementById("gen-msg").textContent="AIが新しい例文を作成中…";
   try{
-    const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);
+    const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),4096);
     A.sentData=d;A.sentCardIdx=0;renderSent();go("s-sent");
   }catch(e){go("s-sent");alert("エラー: "+e.message);}
 };
@@ -3701,7 +3762,7 @@ function restartSentCard(){
   const nb=document.getElementById("btn-sent-new2");
   if(nb)nb.onclick=async function(){
     go("s-gen");document.getElementById("gen-msg").textContent="AIが新しい例文を作成中…";
-    try{const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),3000);A.sentData=d;A.sentCardIdx=0;renderSentCard();go("s-sent");}
+    try{const d=await callAI(buildSentPrompt(A.sentWords.slice(0,20)),4096);A.sentData=d;A.sentCardIdx=0;renderSentCard();go("s-sent");}
     catch(e){go("s-sent");alert("エラー: "+e.message);}
   };
   A.sentCardIdx=0;
@@ -4472,7 +4533,7 @@ async function submitBasicQuiz(){
   ].join("\n");
 
   try{
-    const d=await callAI(prompt,2500);
+    const d=await callAI(prompt,4096);
     const results=d.results||[];
     BS.quizResults=results;
     renderBasicScore(results);
