@@ -651,6 +651,24 @@ input,textarea{font-family:var(--fu)}
     <button class="chip" data-g="purpose" data-v="grammar">文法確認</button>
     <button class="chip" data-g="purpose" data-v="vocab">単語確認</button>
   </div></div>
+  <div class="step-card hidden" id="r-gram-card">
+    <div class="step-hd">STEP 4-2　重点を置く文法単元（複数選択可・未選択時は自動選択）</div>
+    <div class="gram-box">
+      <div class="gram-tabs">
+        <button type="button" class="gram-tab active" id="rgtab-junior" onclick="switchRGramTab('junior')">中学英文法（全27単元）</button>
+        <button type="button" class="gram-tab" id="rgtab-high" onclick="switchRGramTab('high')">高校英文法（全13単元）</button>
+      </div>
+      <div class="gram-actions">
+        <span>選択中: <strong id="r-gram-sel-count" style="color:var(--acc)">0</strong> 単元</span>
+        <div class="gram-act-btns">
+          <button type="button" class="gram-mini-btn" onclick="selectRCurrentTabAll()">表示中を全選択</button>
+          <button type="button" class="gram-mini-btn" onclick="clearAllRGrams()">すべて解除</button>
+        </div>
+      </div>
+      <div class="gram-grid" id="r-gram-grid"></div>
+      <div class="gram-sel-tags" id="r-gram-tags"></div>
+    </div>
+  </div>
   <div class="step-card"><div class="step-hd">STEP 5　ジャンル</div><div class="chip-row wrap">
     <button class="chip" data-g="genre" data-v="expository">説明文</button>
     <button class="chip" data-g="genre" data-v="essay">エッセイ</button>
@@ -1466,7 +1484,7 @@ input,textarea{font-family:var(--fu)}
 // ================================================================
 const A = {
   key:"",
-  r:{school:"",grade:"",qtype:"",purpose:"",genre:"",difficulty:"",jaT:false,enT:false,orderT:false},
+  r:{school:"",grade:"",qtype:"",purpose:"",genre:"",difficulty:"",jaT:false,enT:false,orderT:false,grammars:[]},
   rMode:"test", // "test"|"kunshu"
   w:{school:"",grade:"",wtype:"",lang:"",wordCount:0,wordRule:"",grammars:[]},
   wMode:"test",
@@ -1759,7 +1777,7 @@ document.addEventListener("click",e=>{
     else if(g==="school"){A.r.school=v;updateJrOptions();chkR()}
     else if(g==="grade"){A.r.grade=v;chkR()}
     else if(g==="qtype"){A.r.qtype=v;const info=QTYPE_INFO[v]?.[A.r.school]||"";const d=$("qtype-desc");d.textContent=info;d.className="diff-desc"+(info?" show":"");chkR()}
-    else if(g==="purpose"){A.r.purpose=v;chkR()}
+    else if(g==="purpose"){A.r.purpose=v;updateRGramUI();chkR()}
     else if(g==="genre"){A.r.genre=v;chkR()}
     else if(g==="difficulty"){A.r.difficulty=v;const d=$("diff-desc");d.textContent=DIFF_INFO[v]||"";d.className="diff-desc show";chkR()}
     else if(g==="vbook"){A.v.book=v;updateVRange("v")}
@@ -1795,13 +1813,17 @@ function chkR(){
 }
 function resetReadSet(){
   // 読解設定画面のstateとUI選択をリセット
-  A.r={school:"",grade:"",qtype:"",purpose:"",genre:"",difficulty:"",jaT:false,enT:false,orderT:false};
+  A.r={school:"",grade:"",qtype:"",purpose:"",genre:"",difficulty:"",jaT:false,enT:false,orderT:false,grammars:[]};
   document.querySelectorAll("#s-read-set .chip[data-g]").forEach(c=>c.classList.remove("sel"));
   $("tog-ja").textContent="和訳　OFF";$("tog-ja").classList.remove("on");
   $("tog-en").textContent="英訳　OFF";$("tog-en").classList.remove("on");
   $("tog-order").textContent="並べ替え　OFF";$("tog-order").classList.remove("on");
   $("diff-desc").textContent="";$("diff-desc").classList.remove("show");
   $("qtype-desc").textContent="";$("qtype-desc").classList.remove("show");
+  const rGramCard=$("r-gram-card");if(rGramCard)rGramCard.classList.add("hidden");
+  const rGramGrid=$("r-gram-grid");if(rGramGrid)rGramGrid.innerHTML="";
+  const rGramTags=$("r-gram-tags");if(rGramTags)rGramTags.innerHTML="";
+  const rGramCnt=$("r-gram-sel-count");if(rGramCnt)rGramCnt.textContent="0";
   $("btn-rgen").disabled=true;$("btn-rgen").style.opacity="0.35";
 }
 function chkW(){
@@ -1984,6 +2006,9 @@ function buildRPrompt(){
     `Target: ${s==="junior"?"Junior High School":"Senior High School"} Grade ${g==="ronin"?"Ronin":g} (${gc})`,
     `Text length: ${qtInfo}`,
     `Purpose: ${r.purpose} — ${PI[r.purpose]||""}`,
+    r.purpose==="grammar" && r.grammars && r.grammars.length>0
+      ? `Grammar Focus: Use the following grammar units as the MAIN focus of the passage and questions. Include 2-3 questions specifically testing these grammar points:\n${r.grammars.map(g=>"  - "+g.fullLabel+(g.ex?" (例: "+g.ex+")":"")).join("\n")}`
+      : "",
     `Genre: ${GJ[r.genre]||r.genre}`,
     `Difficulty: ${r.difficulty.toUpperCase()} — ${DI[r.difficulty]||""}`,
     `Optional questions: ${opts}`,
@@ -4760,6 +4785,104 @@ function getPOSBadgeHTML(meaning){
 
 function getAllPOSStr(meaning){
   return detectAllPOS(meaning).join("・") || "";
+}
+
+
+// ================================================================
+// 読解設定 - 文法単元選択（英作文とは独立）
+// ================================================================
+let curRGramTab = "junior";
+
+function updateRGramUI(){
+  const gCard = document.getElementById("r-gram-card");
+  if(!gCard) return;
+  if(A.r.purpose === "grammar"){
+    gCard.classList.remove("hidden");
+    // 学校区分に合わせてタブを切り替え
+    if(A.r.school === "junior") switchRGramTab("junior");
+    else if(A.r.school === "high") switchRGramTab("high");
+    else renderRGramGrid();
+  } else {
+    gCard.classList.add("hidden");
+  }
+}
+
+function switchRGramTab(tab){
+  curRGramTab = tab;
+  const jBtn = document.getElementById("rgtab-junior");
+  const hBtn = document.getElementById("rgtab-high");
+  if(jBtn) jBtn.classList.toggle("active", tab === "junior");
+  if(hBtn) hBtn.classList.toggle("active", tab === "high");
+  renderRGramGrid();
+}
+
+function renderRGramGrid(){
+  const grid = document.getElementById("r-gram-grid");
+  if(!grid) return;
+  grid.innerHTML = "";
+  const list = GRAMMAR_UNITS[curRGramTab] || [];
+  const prefix = curRGramTab === "junior" ? "【中学】" : "【高校】";
+  list.forEach(u => {
+    const fullLabel = prefix + u.name;
+    const isSel = A.r.grammars.some(g => g.id === u.id);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "gram-item" + (isSel ? " sel" : "");
+    const chk = document.createElement("span");
+    chk.className = "gram-chk";
+    chk.textContent = isSel ? "✓" : "";
+    const txt = document.createElement("span");
+    txt.textContent = u.name;
+    btn.append(chk, txt);
+    btn.onclick = () => toggleRGrammarUnit({...u, fullLabel});
+    grid.appendChild(btn);
+  });
+  renderRGramTags();
+}
+
+function toggleRGrammarUnit(u){
+  const idx = A.r.grammars.findIndex(g => g.id === u.id);
+  if(idx >= 0) A.r.grammars.splice(idx, 1);
+  else A.r.grammars.push(u);
+  renderRGramGrid();
+  chkR();
+}
+
+function selectRCurrentTabAll(){
+  const list = GRAMMAR_UNITS[curRGramTab] || [];
+  const prefix = curRGramTab === "junior" ? "【中学】" : "【高校】";
+  list.forEach(u => {
+    if(!A.r.grammars.some(g => g.id === u.id)){
+      A.r.grammars.push({...u, fullLabel: prefix + u.name});
+    }
+  });
+  renderRGramGrid();
+  chkR();
+}
+
+function clearAllRGrams(){
+  A.r.grammars = [];
+  renderRGramGrid();
+  chkR();
+}
+
+function renderRGramTags(){
+  const tags = document.getElementById("r-gram-tags");
+  const cnt = document.getElementById("r-gram-sel-count");
+  if(cnt) cnt.textContent = A.r.grammars.length;
+  if(!tags) return;
+  tags.innerHTML = "";
+  A.r.grammars.forEach(g => {
+    const tag = document.createElement("span");
+    tag.className = "gram-tag";
+    tag.textContent = g.fullLabel + " ";
+    const x = document.createElement("button");
+    x.type = "button";
+    x.textContent = "×";
+    x.onclick = () => toggleRGrammarUnit(g);
+    tag.appendChild(x);
+    tags.appendChild(tag);
+  });
 }
 
 </script>
