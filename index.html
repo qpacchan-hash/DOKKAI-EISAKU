@@ -2294,7 +2294,8 @@ $("btn-rgen").onclick=async()=>{
     const genre=GJ[A.r.genre]||"";const diff=A.r.difficulty.toUpperCase();
     $("rs-badge").textContent=genre+" ／ "+diff+(A.rMode==="kunshu"?" ／ 💡特訓":"");
     $("rs-mode-badge").textContent=A.rMode==="kunshu"?"💡 特訓モード：ヒント・翻訳バー利用可":"";
-    $("rs-min").textContent=d.targetMinutes||10;
+    const calcMin=calcReadingTime(d.questions||[]);
+    $("rs-min").textContent=calcMin;
     $("rs-hint").textContent="スタートを押すとタイマーが開始されます。";
     go("s-rmode");
   }catch(e){go("s-read-set");alert("エラー: "+e.message+"\n\nもう一度お試しください。")}
@@ -2346,8 +2347,8 @@ function renderQuiz(d,ids){
   if(jaTBtn)jaTBtn.style.display="none";
   const jaPanel=$("r-pass-ja");
   if(jaPanel){jaPanel.classList.remove("show");jaPanel.style.display="none"}
-  A.tSec=(d.targetMinutes||10)*60;
   const qs=ids?d.questions.filter(q=>ids.includes(q.id)):d.questions;
+  A.tSec=calcReadingTime(qs)*60;
   const l=$("r-qlist");l.innerHTML="";
   qs.forEach((q,i)=>{const c=mkQCard(q,i+1);l.appendChild(c)});
   $("r-qcount").textContent=qs.length+"問";
@@ -2489,8 +2490,8 @@ function renderAnalogQuiz(d,ids){
   // アナログも和訳非表示
   const aJa=$("a-pass-ja");
   if(aJa){aJa.classList.remove("show");aJa.style.display="none"}
-  A.tSec=(d.targetMinutes||10)*60;
   const qs=ids?d.questions.filter(q=>ids.includes(q.id)):d.questions;
+  A.tSec=calcReadingTime(qs)*60;
   const l=$("a-qlist");l.innerHTML="";
   const typeLbl={choice:"選択",free:"記述","translation-ja":"和訳","translation-en":"英訳",order:"並べ替え"};
   qs.forEach((q,i)=>{
@@ -2629,7 +2630,8 @@ $("btn-r-redo").onclick=()=>go("s-redo-sel");
 $("btn-r-expl").onclick=()=>go("s-expl-sel");
 $("btn-redo-all").onclick=()=>{A.redoIds=null;A.uans={};go("s-rmode")};
 $("btn-redo-wrong").onclick=()=>{
-  const wrongMin=Math.max(1,Math.round((A.qdata.targetMinutes||10)*A.wrong.length/Math.max(1,activeQs().length)));
+  const wrongQs=A.qdata.questions.filter(q=>A.wrong.includes(q.id));
+  const wrongMin=calcReadingTime(wrongQs);
   $("rws-min").textContent=wrongMin;go("s-redo-wrong-start");
 };
 function rwsStart(){
@@ -4912,6 +4914,27 @@ function renderRGramTags(){
     tag.appendChild(x);
     tags.appendChild(tag);
   });
+}
+
+
+// ================================================================
+// 読解 目標タイム計算（問題数・種類に応じて）
+// 選択問題: 1問につき3分、記述・和訳・英訳・並べ替え: 1問につき4分
+// 最低5分
+// ================================================================
+function calcReadingTime(questions){
+  if(!questions||!questions.length) return 10;
+  let mins=0;
+  questions.forEach(q=>{
+    const t=q.type||"choice";
+    if(t==="choice"||t==="word-order"||t==="order"){
+      mins+=3;
+    }else{
+      // free, translation-ja, translation-en, free-response
+      mins+=4;
+    }
+  });
+  return Math.max(5, mins);
 }
 
 </script>
