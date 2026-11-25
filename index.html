@@ -1992,11 +1992,11 @@ function extractAndParseJSON(raw){
 function buildRPrompt(){
   const r=A.r,s=r.school,g=r.grade,gc=(GC[s]||{})[g]||"all curriculum";
   const qt=r.qtype,qtInfo=QTYPE_INFO[qt]?.[s]||"";
-  const opts=[
-    r.jaT?"Include 1 Japanese translation question (underline a sentence to translate into Japanese)":"",
-    r.enT?"Include 1 English translation question (give a Japanese sentence to translate into English)":"",
-    r.orderT&&s==="junior"?"Include 1 word-ordering question (scrambled words that students must arrange)":""
-  ].filter(Boolean).join("; ")||"None";
+  const opts=[];
+  if(r.jaT) opts.push("Include 1 Japanese translation question: underline ONE sentence from the passage and ask the student to translate it into Japanese. The underlined sentence must NOT be the same sentence used in any English translation question.");
+  if(r.enT) opts.push("Include 1 English translation question: provide ONE Japanese sentence (write it yourself as a new sentence summarizing part of the content) and ask the student to translate it into English. Do NOT use the Japanese translation of any sentence already used in a Japanese translation question. The Japanese sentence and the English translation question must be completely independent from the Japanese translation question.");
+  if(r.orderT&&s==="junior") opts.push("Include 1 word-ordering question (scrambled words that students must arrange)");
+  const optsStr=opts.length?opts.join("\n  - "):"None";
   const isVis=r.genre==="material"||r.genre==="chart";
   const lines=[
     "You are an expert English reading comprehension question creator for Japanese students.",
@@ -2017,7 +2017,7 @@ function buildRPrompt(){
       : "",
     `Genre: ${GJ[r.genre]||r.genre}`,
     `Difficulty: ${r.difficulty.toUpperCase()} — ${DI[r.difficulty]||""}`,
-    `Optional questions: ${opts}`,
+    `Optional questions:\n  - ${optsStr}`,
     "",
     "[Requirements]",
     "- Write the passage in English",
@@ -2025,7 +2025,11 @@ function buildRPrompt(){
     "- ALL choice options must be in Japanese",
     "- ALL explanations (explanation field) must be in Japanese",
     "- The 'evidence' field (quoted sentence from passage) must be in English",
-    "- Include 4-5 multiple choice questions and 1-2 free-response questions",
+    `- MINIMUM question count by text length:`,
+    qt==="short"  ? "  * Short text: minimum 2 questions total (1-2 multiple choice + 1 free-response)" : "",
+    qt==="mid"    ? "  * Mid-length text: minimum 4 questions total (3-4 multiple choice + 1-2 free-response)" : "",
+    qt==="long"   ? "  * Long text: minimum 7 questions total (5-6 multiple choice + 2-3 free-response)" : "",
+    "- Always meet the MINIMUM count. You may add more questions if the text supports it.",
     "",
     "[CRITICAL: Vocabulary Level Control]",
     `- Target vocabulary level: ${s==="junior"?"Junior High School (中学校)":"Senior High School (高校)"} Grade ${g==="ronin"?"graduate level":g}`,
@@ -2061,7 +2065,8 @@ function buildRPrompt(){
       hints: A.rMode==="kunshu" ? [{paraIndex:0,point:"この段落のポイント（日本語）",structure:"注目すべき構文（日本語）",keywords:[{word:"key word",meaning:"意味"}]}] : undefined,
       questions:[
         {id:1,type:"choice",question:"設問（日本語）",choices:["ア. A","イ. B","ウ. C","エ. D"],answer:"ア",evidence:"English sentence",explanation:"日本語解説"},
-        {id:2,type:"free",question:"設問（日本語）",answer:"模範解答",evidence:"English sentence",explanation:"日本語解説"}
+        {id:2,type:"choice",question:"設問（日本語）",choices:["ア. A","イ. B","ウ. C","エ. D"],answer:"イ",evidence:"English sentence",explanation:"日本語解説"},
+        {id:3,type:"free",question:"設問（日本語）",answer:"模範解答",evidence:"English sentence",explanation:"日本語解説"}
       ]
     })
   ];
