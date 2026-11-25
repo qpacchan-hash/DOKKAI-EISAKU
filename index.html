@@ -1527,7 +1527,7 @@ const DIFF_INFO={
   hard:"HARD：高難度語彙・長大複雑文・推論・統合問題",
   hell:"HELL：専門語・二重否定・仮定法・批判的読解"
 };
-const DI={easy:"Vocabulary: textbook basics only. Sentences: short, simple. Theme: concrete/daily. Questions: fact-finding.",normal:"Vocabulary: standard exam level. Sentences: 15-25 words, complex clauses. Theme: social/cultural. Questions: paraphrase required.",hard:"Vocabulary: advanced, polysemous words. Sentences: 30+ words, nested modifiers. Theme: abstract/academic. Questions: inference, integration.",hell:"Vocabulary: academic/literary. Sentences: 50+ words, inversion, ellipsis. Theme: philosophical. Questions: critical reading, summarization."};
+const DI={easy:"Vocabulary: textbook basics ONLY - strictly grade-appropriate words. Annotate ANY word beyond basic level. Sentences: short, simple. Theme: concrete/daily. Questions: fact-finding, comprehension only.",normal:"Vocabulary: standard grade-level words. Annotate any advanced words in notes. Sentences: 15-25 words, some complex clauses. Theme: social/cultural. Questions: paraphrase, inference required.",hard:"Vocabulary: advanced grade-level words allowed, but still must annotate any words beyond curriculum. Sentences: 30+ words, nested modifiers. Theme: abstract/academic. Questions: inference, integration.",hell:"Vocabulary: challenging academic words, BUT annotate all words beyond standard high school curriculum. Sentences: 50+ words, complex structures. Theme: philosophical. Questions: critical reading, summarization."};
 const PI={speed:"Passage: longer (300-450 words), clear structure for speed reading.","read-meaning":"Passage: 200-350 words, context-dependent meaning.","read-structure":"Passage: 200-350 words, complex structures (participial phrases, inversion).","grammar":"Focus on specific grammar points; 150-300 words.","vocab":"Focus on vocabulary in context; 150-300 words."};
 const SCC=`Scoring (100 points, deduction-based):
 1. Content (30pts): Correctly addresses theme/conditions
@@ -2001,6 +2001,12 @@ function buildRPrompt(){
   const lines=[
     "You are an expert English reading comprehension question creator for Japanese students.",
     `Create a ${qt==="short"?"short":"mid-length"} reading question set in JSON format.`,
+    "IMPORTANT OVERALL RULES:",
+    "1. Control vocabulary difficulty strictly for the target grade level.",
+    "2. Make ALL multiple choice options (ア/イ/ウ/エ) completely unique - never repeat the same meaning.",
+    r.purpose==="grammar"
+      ? "3. Focus ONLY on grammar/structure questions. Use Japanese grammar terms (日本語の文法用語)."
+      : "3. Focus ONLY on comprehension/content questions. Never ask grammar or vocabulary definition questions.",
     "",
     "[Conditions]",
     `Target: ${s==="junior"?"Junior High School":"Senior High School"} Grade ${g==="ronin"?"Ronin":g} (${gc})`,
@@ -2015,14 +2021,32 @@ function buildRPrompt(){
     "",
     "[Requirements]",
     "- Write the passage in English",
-    "- ALL question text (question field) MUST be written in ENGLISH",
+    "- ALL question text (question field) MUST be written in JAPANESE (日本語で書くこと)",
     "- ALL choice options must be in Japanese",
     "- ALL explanations (explanation field) must be in Japanese",
     "- The 'evidence' field (quoted sentence from passage) must be in English",
     "- Include 4-5 multiple choice questions and 1-2 free-response questions",
-    "- Annotate difficult vocabulary in the notes field with Japanese explanations",
+    "",
+    "[CRITICAL: Vocabulary Level Control]",
+    `- Target vocabulary level: ${s==="junior"?"Junior High School (中学校)":"Senior High School (高校)"} Grade ${g==="ronin"?"graduate level":g}`,
+    `- ${s==="junior"
+      ? "STRICTLY use only vocabulary appropriate for Japanese junior high school students. Grade 1: basic everyday words (go, eat, school, home, like). Grade 2: past tense, adjectives, basic verbs. Grade 3: slightly more complex, but NO advanced academic vocabulary."
+      : "Use vocabulary appropriate for Japanese senior high school students. Avoid obscure academic or literary words beyond standard high school curriculum."}`,
+    "- If you MUST use a word beyond the target level, you MUST add it to the 'notes' field with a Japanese explanation.",
+    "- Annotate ALL difficult vocabulary and idioms in the notes field with Japanese explanations",
     isVis?"- Include a 'visual' field with a self-contained SVG representing the chart/table":"",
     "- Include a 'passageJa' field with a complete Japanese translation of the entire passage",
+    "",
+    "[CRITICAL: Question Type Rules]",
+    r.purpose==="grammar"
+      ? "- Questions MUST focus on grammar and structure. Use Japanese grammar terminology (日本語の文法用語) for all grammar-related questions and explanations (e.g., 現在完了形, 関係代名詞, 分詞構文). Do NOT ask about vocabulary meanings."
+      : "- Questions MUST focus on COMPREHENSION and CONTENT UNDERSTANDING. Ask about: main idea, author's intent, paragraph meaning, logical flow, inference, cause/effect. Do NOT ask about grammar rules or vocabulary definitions.",
+    "",
+    "[CRITICAL: Multiple Choice Uniqueness]",
+    "- ALL 4 choice options (ア, イ, ウ, エ) MUST be completely different from each other in content and meaning.",
+    "- NEVER generate two choices that say the same thing with slightly different wording.",
+    "- Each choice must represent a genuinely distinct answer.",
+    "- Wrong choices must be plausible but clearly incorrect based on the passage.",
     "",
     A.rMode==="kunshu" ? "IMPORTANT: Since this is TRAINING MODE, include a 'hints' field: an array of hint objects, one per paragraph. Each hint must include: (1) 'point': the main reading point of the paragraph in Japanese (2-3 sentences), (2) 'structure': key grammar/syntax to notice in Japanese (1-2 sentences), (3) 'keywords': array of {word, meaning} for important words in that paragraph." : "",
     "",
